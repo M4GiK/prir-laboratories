@@ -42,6 +42,15 @@ std::string getFileContents(const char* filename)
 }
 
 /**
+ *
+ * @param contents
+ * @return
+ */
+std::string collectTrigram(std::string contents) {
+	return NULL;
+}
+
+/**
  * This method analyzes  the given document. Splits contents to trigrams which are analyze.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
@@ -51,13 +60,13 @@ std::string getFileContents(const char* filename)
 std::string analyzeDocument(unsigned int threadCount, std::string contents)
 {
 	TimePoint start = std::chrono::system_clock::now();
-	// TODO: Write code...
+	std::string trigrams = collectTrigram(contents);
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
 	cout << elapsedMillis.count() << endl;
 
-	return NULL;
+	return trigrams;
 }
 
 /**
