@@ -3,12 +3,11 @@
 // Author      : Michał Szczygieł & Aleksander Śmierciak
 //============================================================================
 
+#include <cerrno>
 #include <chrono>
-#include <cstdlib>
-#include <ctime>
-#include <cmath>
+#include <fstream>
 #include <iostream>
-#include <stdexcept>
+#include <map>
 #include <string>
 
 using std::cout;
@@ -18,13 +17,40 @@ using std::endl;
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 typedef std::chrono::duration<double> Duration;
 
+
 /**
+ * Gets contents of given file.
  *
- * @param threadCount
- * @param fileName
+ * @param filename The name of file to read.
+ * @return Contents file as a string.
  */
-void analyzeDocument(unsigned int threadCount, std::string fileName)
+std::string getFileContents(const char *filename)
 {
+	std::ifstream in(filename, std::ios::in | std::ios::binary);
+
+	if (in)
+	{
+		std::string contents;
+		in.seekg(0, std::ios::end);
+		contents.resize(in.tellg());
+		in.seekg(0, std::ios::beg);
+		in.read(&contents[0], contents.size());
+		in.close();
+
+		return (contents);
+	}
+	throw(errno);
+}
+
+/**
+ * This method analyzes  the given document. Splits contents to trigrams which are analyze.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param fileName The name of file to analyze.
+ */
+void analyzeDocument(unsigned int threadCount, const char *fileName)
+{
+	std::string content = getFileContents(fileName);
 
 }
 
@@ -48,7 +74,7 @@ int main(int argc, char* argv[])
 	}
 
 	unsigned int threadCount = std::stoi(argv[1]);
-	std::string fileName = argv[2];
+	char *fileName = argv[2];
 
 	TimePoint start = std::chrono::system_clock::now();
 	analyzeDocument(threadCount, fileName);
