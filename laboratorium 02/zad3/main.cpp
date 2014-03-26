@@ -24,7 +24,7 @@ typedef std::chrono::duration<double> Duration;
  * @param filename The name of file to read.
  * @return Contents file as a string.
  */
-std::string getFileContents(const char *filename)
+std::string getFileContents(const char* filename)
 {
 	std::ifstream in(filename, std::ios::in | std::ios::binary);
 
@@ -46,12 +46,27 @@ std::string getFileContents(const char *filename)
  * This method analyzes  the given document. Splits contents to trigrams which are analyze.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
- * @param fileName The name of file to analyze.
+ * @param contents The contents to analyze The name of file to analyze.
  */
-void analyzeDocument(unsigned int threadCount, const char *fileName)
+void analyzeDocument(unsigned int threadCount, std::string contents)
 {
-	std::string content = getFileContents(fileName);
 
+}
+
+/**
+ *
+ * @param numberOfFiles
+ * @param nameFiles
+ * @return
+ */
+std::string getFilesContents(int numberOfFiles, char* nameFiles[]) {
+	std::string contentsBuffor;
+
+	for (int i = 0; i < numberOfFiles; ++i) {
+		contentsBuffor += getFileContents(nameFiles[i]);
+	}
+
+	return contentsBuffor;
 }
 
 /**
@@ -60,24 +75,25 @@ void analyzeDocument(unsigned int threadCount, const char *fileName)
  * @param argc  Number of arguments given to the program.
  * 				This value should be equal to 3.
  * @param argv
- * 				The first parameter: <threadCount>
- * 				The second parameter: <file>
+ * 				The first parameter:  <threadCount>
+ * 				The second parameter: <langCode>
+ * 				The third parameter:  <file>
  * @return  C-standard return code: 0 if success,
  * 			other value if errors occurred during the execution.
  */
 int main(int argc, char* argv[])
 {
-	if (argc != 3)
+	if (argc < 4)
 	{
-		cout << "Usage: ./analiza_omp <threadCount> <file>" << endl;
+		cout << "Usage: ./analiza_omp <threadCount> <langCode> <file>" << endl;
 		return -1;
 	}
 
 	unsigned int threadCount = std::stoi(argv[1]);
-	char *fileName = argv[2];
+	char *langCode = argv[2];
 
 	TimePoint start = std::chrono::system_clock::now();
-	analyzeDocument(threadCount, fileName);
+	analyzeDocument(threadCount, getFilesContents(argc - 3 , argv));
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
