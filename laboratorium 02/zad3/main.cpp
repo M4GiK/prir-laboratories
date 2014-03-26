@@ -17,7 +17,6 @@ using std::endl;
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 typedef std::chrono::duration<double> Duration;
 
-
 /**
  * Gets contents of given file.
  *
@@ -47,26 +46,47 @@ std::string getFileContents(const char* filename)
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  * @param contents The contents to analyze The name of file to analyze.
+ * @return Data with information about processed analyze.
  */
-void analyzeDocument(unsigned int threadCount, std::string contents)
+std::string analyzeDocument(unsigned int threadCount, std::string contents)
 {
+	TimePoint start = std::chrono::system_clock::now();
+	// TODO: Write code...
+	TimePoint end = std::chrono::system_clock::now();
 
+	Duration elapsedMillis = end - start;
+	cout << elapsedMillis.count() << endl;
+
+	return NULL;
 }
 
 /**
+ * Gets contents data from given files.
  *
- * @param numberOfFiles
- * @param nameFiles
- * @return
+ * @param numberOfFiles The amount of files to read.
+ * @param nameFiles The array of name files.
+ * @return The contents of read files in single string.
  */
-std::string getFilesContents(int numberOfFiles, char* nameFiles[]) {
+std::string getFilesContents(int numberOfFiles, char* nameFiles[])
+{
 	std::string contentsBuffor;
 
-	for (int i = 0; i < numberOfFiles; ++i) {
+	for (int i = 0; i < numberOfFiles; ++i)
+	{
 		contentsBuffor += getFileContents(nameFiles[i]);
 	}
 
 	return contentsBuffor;
+}
+
+/**
+ *
+ * @param dataToSave
+ * @param langCode
+ */
+void saveToFile(std::string dataToSave, char *langCode)
+{
+
 }
 
 /**
@@ -92,12 +112,9 @@ int main(int argc, char* argv[])
 	unsigned int threadCount = std::stoi(argv[1]);
 	char *langCode = argv[2];
 
-	TimePoint start = std::chrono::system_clock::now();
-	analyzeDocument(threadCount, getFilesContents(argc - 3 , argv));
-	TimePoint end = std::chrono::system_clock::now();
-
-	Duration elapsedMillis = end - start;
-	cout << elapsedMillis.count() << endl;
+	std::string dataToSave = analyzeDocument(threadCount,
+			getFilesContents(argc - 3, argv));
+	saveToFile(dataToSave, langCode);
 
 	return 0;
 }
