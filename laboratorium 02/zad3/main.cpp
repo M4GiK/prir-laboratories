@@ -3,12 +3,17 @@
 // Author      : Michał Szczygieł & Aleksander Śmierciak
 //============================================================================
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <cerrno>
 #include <chrono>
+#include <exception>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
+#include <string.h>
+#include <stdexcept>
+#include <stdio.h>
+#include <stdexcept>
 
 using std::cout;
 using std::cin;
@@ -46,7 +51,8 @@ std::string getFileContents(const char* filename)
  * @param contents
  * @return
  */
-std::string collectTrigram(std::string contents) {
+std::string collectTrigram(std::string contents)
+{
 	return NULL;
 }
 
@@ -89,13 +95,30 @@ std::string getFilesContents(int numberOfFiles, char* nameFiles[])
 }
 
 /**
+ * Saves given data to file.
+ * This method also appends extension "dat" for name which is langCode.
  *
- * @param dataToSave
- * @param langCode
+ * @param dataToSave The data to save.
+ * @param langCode The name of file which will be save.
  */
 void saveToFile(std::string dataToSave, char *langCode)
 {
-
+	std::ofstream outfile(strcat(langCode, ".dat"));
+	try
+	{
+		if (!outfile.is_open())
+		{
+			std::cerr << "Couldn't open '" << langCode << endl;
+		}
+		else
+		{
+			outfile << dataToSave << endl;
+			outfile.close();
+		}
+	} catch (const std::exception& e)
+	{
+		std::cerr << "\n*** ERROR: " << e.what() << endl;
+	}
 }
 
 /**
