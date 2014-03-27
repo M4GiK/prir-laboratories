@@ -9,6 +9,7 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <string.h>
 #include <stdexcept>
@@ -51,11 +52,36 @@ std::string getFileContents(const char* filename)
  * @param contents
  * @return
  */
-std::string collectTrigram(std::string contents)
+std::map<std::string, int> collectTrigram(std::string contents)
 {
-	return NULL;
+	// Slice data
+
+	// Give to process using Open MP
+	std::map<std::string, int> trigram;
+	trigram["POL"] = 2;
+
+	return trigram;
 }
 
+/**
+ * Converts map to string. This method prepares data to save into string.
+ * @param trigrams The map with data to convert.
+ * @return Converted map into string.
+ */
+std::string mapToString(std::map<std::string, int> trigrams)
+{
+	std::string convertedMap;
+
+	for (std::map<std::string, int>::iterator iterator = trigrams.begin();
+			iterator != trigrams.end(); ++iterator)
+	{
+		convertedMap += (*iterator).first + " "
+				+ std::to_string((*iterator).second);
+		convertedMap += "\n";
+	}
+
+	return convertedMap;
+}
 /**
  * This method analyzes  the given document. Splits contents to trigrams which are analyze.
  *
@@ -66,13 +92,13 @@ std::string collectTrigram(std::string contents)
 std::string analyzeDocument(unsigned int threadCount, std::string contents)
 {
 	TimePoint start = std::chrono::system_clock::now();
-	std::string trigrams = collectTrigram(contents);
+	std::map<std::string, int> trigrams = collectTrigram(contents);
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
 	cout << elapsedMillis.count() << endl;
 
-	return trigrams;
+	return mapToString(trigrams);
 }
 
 /**
