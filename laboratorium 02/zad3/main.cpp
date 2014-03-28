@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 {
 	if (argc < 4)
 	{
-		cout << "Usage: ./analiza_omp <threadCount> <langCode> <file>" << endl;
+		cout << "Usage: ./analiza_omp <threadCount> <langCode> <file> [files...]" << endl;
 		return -1;
 	}
 
