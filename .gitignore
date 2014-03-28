@@ -11,3 +11,8 @@
 *.lai
 *.la
 *.a
+
+#M4GiK Workspace
+laboratorium 02/zad3/dict
+.metadata/
+
