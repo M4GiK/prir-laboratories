@@ -15,4 +15,18 @@
 #M4GiK Workspace
 laboratorium 02/zad3/dict
 .metadata/
+*.project
+*.cproject
+*.mk
+*.prefs
+*.d
+RemoteSystemsTempFiles/
+._.DS_Store
+laboratorium 01/zad1/Debug/
+laboratorium 01/zad2/Debug/
+laboratorium 02/zad3/Debug/
+laboratorium 02/zad4/Debug/
+laboratorium 02/zad5/Debug/
+
+
 
