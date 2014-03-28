@@ -32,7 +32,7 @@ typedef std::chrono::duration<double> Duration;
 std::string getFileContents(const char* filename)
 {
 
-	std::ifstream in(filename, std::ios::in | std::ios::binary);
+	std::ifstream in(filename, std::ios::in);
 
 	if (in)
 	{
