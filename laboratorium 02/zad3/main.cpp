@@ -10,14 +10,13 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <string>
+#include <math.h>
 #include <string.h>
 #include <stdexcept>
 #include <stdio.h>
 #include <stdexcept>
 
 using std::cout;
-using std::cin;
 using std::endl;
 
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
@@ -48,23 +47,58 @@ std::string getFileContents(const char* filename)
 }
 
 /**
+ * Prepares data to analyze process. Cuts the size of result to fit modulo 3.
+ * Calculates also data portion to fit modulo 3 for threads.
  *
- * @param contents
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param contents The contents to analyze.
+ * @return The size of portion data for one thread.
+ */
+int prepareData(unsigned int threadCount, std::string &contents)
+{
+	int limit = contents.size() - (contents.size() % 3);
+	contents = contents.substr(0, limit);
+
+	int portion = ceil((contents.size()) / threadCount);
+	portion += 3 - (portion % 3);
+
+	return portion;
+}
+
+/**
+ * Analyzes trigrams for given string using OpenMP.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param contents The contents to analyze.
+ * @param portion The portion of data for one thread.
  * @return
  */
-std::map<std::string, int> collectTrigram(std::string contents)
+std::map<std::string, int> analyzeProcess(unsigned int threadCount,
+		std::string contents, int portion)
 {
-	// Slice data
+	return NULL;
+}
 
-	// Give to process using Open MP
-	std::map<std::string, int> trigram;
-	trigram["POL"] = 2;
+/**
+ * Collects trigrams from given data.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param contents The contents to analyze.
+ * @return The map with trigrams.
+ */
+std::map<std::string, int> collectTrigram(unsigned int threadCount,
+		std::string contents)
+{
+	int portion = prepareData(threadCount, contents);
+	std::map<std::string, int> trigram = analyzeProcess(threadCount, contents,
+			portion);
 
 	return trigram;
 }
 
 /**
  * Converts map to string. This method prepares data to save into string.
+ *
  * @param trigrams The map with data to convert.
  * @return Converted map into string.
  */
@@ -82,17 +116,18 @@ std::string mapToString(std::map<std::string, int> trigrams)
 
 	return convertedMap;
 }
+
 /**
  * This method analyzes  the given document. Splits contents to trigrams which are analyze.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
- * @param contents The contents to analyze The name of file to analyze.
+ * @param contents The contents to analyze.
  * @return Data with information about processed analyze.
  */
 std::string analyzeDocument(unsigned int threadCount, std::string contents)
 {
 	TimePoint start = std::chrono::system_clock::now();
-	std::map<std::string, int> trigrams = collectTrigram(contents);
+	std::map<std::string, int> trigrams = collectTrigram(threadCount, contents);
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
