@@ -134,11 +134,11 @@ void performSumOperations(const DoubleMatrix &A, const DoubleMatrix &B, unsigned
 {
     const DoubleMatrix *C;
     TimePoint start = std::chrono::system_clock::now();
-//    for (unsigned int i = 0; i < 10000; ++i)
-//    {
+    for (unsigned int i = 0; i < 10000; ++i)
+    {
         C = sumMatrices(A, B, threadCount);
         delete(C);
-//    }
+    }
     TimePoint end = std::chrono::system_clock::now();
 
     cout << ((Duration)(end - start)).count();
@@ -185,11 +185,11 @@ void performMultiplyOperations(const DoubleMatrix &A, const DoubleMatrix &B, uns
 {
     const DoubleMatrix *C;
     TimePoint start = std::chrono::system_clock::now();
-//    for (unsigned int i = 0; i < 10000; ++i)
-//    {
+    for (unsigned int i = 0; i < 10000; ++i)
+    {
         C = multiplyMatrices(A, B, threadCount);
         delete(C);
-//    }
+    }
     TimePoint end = std::chrono::system_clock::now();
 
     cout << ((Duration)(end - start)).count();
