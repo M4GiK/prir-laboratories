@@ -223,7 +223,7 @@ void saveToFile(std::string dataToSave, char *langCode)
  * @param argv
  * 				The first parameter:  <threadCount>
  * 				The second parameter: <langCode>
- * 				The third parameter:  <file>
+ * 				The third parameter:  <file> [files...]
  * @return  C-standard return code: 0 if success,
  * 			other value if errors occurred during the execution.
  */
