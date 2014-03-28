@@ -9,6 +9,7 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <omp.h>
 #include <map>
 #include <math.h>
 #include <string.h>
@@ -30,6 +31,7 @@ typedef std::chrono::duration<double> Duration;
  */
 std::string getFileContents(const char* filename)
 {
+
 	std::ifstream in(filename, std::ios::in | std::ios::binary);
 
 	if (in)
@@ -43,27 +45,10 @@ std::string getFileContents(const char* filename)
 
 		return (contents);
 	}
+
 	throw(errno);
 }
 
-/**
- * Prepares data to analyze process. Cuts the size of result to fit modulo 3.
- * Calculates also data portion to fit modulo 3 for threads.
- *
- * @param threadCount Number of threads to spawn in the parallel OpenMP block.
- * @param contents The contents to analyze.
- * @return The size of portion data for one thread.
- */
-int prepareData(unsigned int threadCount, std::string &contents)
-{
-	int limit = contents.size() - (contents.size() % 3);
-	contents = contents.substr(0, limit);
-
-	int portion = ceil((contents.size()) / threadCount);
-	portion += 3 - (portion % 3);
-
-	return portion;
-}
 
 /**
  * Analyzes trigrams for given string using OpenMP.
@@ -76,7 +61,54 @@ int prepareData(unsigned int threadCount, std::string &contents)
 std::map<std::string, int> analyzeProcess(unsigned int threadCount,
 		std::string contents, int portion)
 {
-	return NULL;
+	std::map<std::string, int> trigram;
+
+	#pragma omp parallel num_threads(threadCount)
+	{
+		std::string threeLetters;
+		unsigned int endPosition = portion * (omp_get_thread_num() + 1);
+
+		if (endPosition > contents.size())
+		{
+			endPosition = contents.size();
+		}
+
+		#pragma for default(none) shared(contents, trigram) firstprivate(portion) private(threeLetters)
+		for (int i = portion * omp_get_thread_num();
+				i != portion * (omp_get_thread_num() + 1); i += 3)
+		{
+			threeLetters = std::string(contents.substr(i, 3));
+			trigram[threeLetters]++;
+		}
+	}
+
+	return trigram;
+}
+
+/**
+ * Prepares data to analyze process. Cuts the size of result to fit modulo 3.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ */
+void prepareData(std::string &contents)
+{
+	int limit = contents.size() - (contents.size() % 3);
+	contents = contents.substr(0, limit);
+}
+
+/**
+ * Calculates data portion to fit modulo 3 for threads.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param contents The contents to analyze.
+ * @return The size of portion data for one thread.
+ */
+int getPortionforThread(unsigned int threadCount, std::string contents)
+{
+	int portion = ceil((contents.size()) / threadCount);
+	portion += 3 - (portion % 3);
+
+	return portion;
 }
 
 /**
@@ -89,7 +121,8 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
 std::map<std::string, int> collectTrigram(unsigned int threadCount,
 		std::string contents)
 {
-	int portion = prepareData(threadCount, contents);
+	prepareData(contents);
+	int portion = getPortionforThread(threadCount, contents);
 	std::map<std::string, int> trigram = analyzeProcess(threadCount, contents,
 			portion);
 
