@@ -16,6 +16,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <algorithm>
 
 using std::cout;
 using std::endl;
@@ -166,6 +167,18 @@ std::string analyzeDocument(unsigned int threadCount, std::string contents)
 }
 
 /**
+ * Replaces line character codes to spaces.
+ *
+ * @param contentsBuffor The contexts for replaces line character code to spaces.
+ * @return The contexts with replaced characters.
+ */
+std::string replaceLines(std::string contentsBuffor)
+{
+	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
+	return contentsBuffor;
+}
+
+/**
  * Gets contents data from given files.
  *
  * @param numberOfFiles The amount of files to read.
@@ -181,7 +194,7 @@ std::string getFilesContents(int numberOfFiles, char* nameFiles[])
 		contentsBuffor += getFileContents(nameFiles[i]);
 	}
 
-	return contentsBuffor;
+	return replaceLines(contentsBuffor);
 }
 
 /**
