@@ -77,8 +77,6 @@ void prepareData(string &contents)
 int getPortionforThread(unsigned int threadCount, string contents)
 {
 	int portion = ceil((contents.size()) / threadCount);
-	portion += 3 - (portion % 3);
-
 	return portion;
 }
 
@@ -93,24 +91,16 @@ int getPortionforThread(unsigned int threadCount, string contents)
 Histogram analyzeProcess(unsigned int threadCount,
         string contents, int portion)
 {
-    Histogram trigrams;
+	Histogram trigrams;
+	string threeLetters;
 
-	#pragma omp parallel num_threads(threadCount)
+	#pragma omp parallel num_threads(threadCount) shared(trigrams)
 	{
-        string threeLetters;
-		unsigned int endPosition = portion * (omp_get_thread_num() + 1);
-
-		if (endPosition > contents.size())
+		#pragma omp for private(threeLetters) schedule(static)
+		for (unsigned int i = 0; i < contents.size(); i += 3)
 		{
-			endPosition = contents.size();
-		}
-
-        #pragma omp for firstprivate(portion) private(threeLetters)
-		for (int i = portion * omp_get_thread_num();
-                i < portion * (omp_get_thread_num() + 1); i += 3)
-		{
-            threeLetters = string(contents.substr(i, 3));
-            trigrams[threeLetters]++;
+			threeLetters = string(contents.substr(i, 3));
+			trigrams[threeLetters]++;
 		}
 	}
 
