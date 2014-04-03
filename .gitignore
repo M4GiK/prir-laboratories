@@ -12,6 +12,10 @@
 *.la
 *.a
 
+# qmake
+*.pro.user
+*/build-*
+
 #M4GiK Workspace
 laboratorium 02/zad3/dict
 .metadata/
