@@ -4,10 +4,14 @@
 //============================================================================
 
 #define _CRT_SECURE_NO_WARNINGS
+#include <math.h>
+#include <omp.h>
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <fstream>
 #include <iterator>
+#include <map>
 #include <string>
 
 using std::cout;
@@ -16,6 +20,17 @@ using std::endl;
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 typedef std::chrono::duration<double> Duration;
 
+/**
+ * Replaces line character codes to spaces.
+ *
+ * @param contentsBuffor The contexts for replaces line character code to spaces.
+ * @return The contexts with replaced characters.
+ */
+std::string replaceLines(std::string contentsBuffor)
+{
+	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
+	return contentsBuffor;
+}
 
 /**
  * Gets contents of given file.
@@ -33,7 +48,7 @@ std::string getFileContents(const char* filename)
 				std::istreambuf_iterator<char>());
 		in.close();
 
-		return (contents);
+		return replaceLines(contents);
 	}
 
 	throw(errno);
