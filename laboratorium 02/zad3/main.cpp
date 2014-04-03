@@ -31,16 +31,12 @@ typedef std::chrono::duration<double> Duration;
  */
 std::string getFileContents(const char* filename)
 {
-
 	std::ifstream in(filename, std::ios::in);
-
+	cout << filename << endl;
 	if (in)
 	{
-		std::string contents;
-		in.seekg(0, std::ios::end);
-		contents.resize(in.tellg());
-		in.seekg(0, std::ios::beg);
-		in.read(&contents[0], contents.size());
+		std::string contents((std::istreambuf_iterator<char>(in)),
+				std::istreambuf_iterator<char>());
 		in.close();
 
 		return (contents);
@@ -239,7 +235,7 @@ int main(int argc, char* argv[])
 	char *langCode = argv[2];
 
 	std::string dataToSave = analyzeDocument(threadCount,
-			getFilesContents(argc - 3, argv));
+			getFilesContents(argc - 3, &argv[3]));
 	saveToFile(dataToSave, langCode);
 
 	return 0;
