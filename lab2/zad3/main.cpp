@@ -59,24 +59,16 @@ string getFileContents(const string fileName)
 Histogram analyzeProcess(unsigned int threadCount,
         string contents, int portion)
 {
-    Histogram trigrams;
+	Histogram trigrams;
+	string threeLetters;
 
-	#pragma omp parallel num_threads(threadCount)
+	#pragma omp parallel num_threads(threadCount) shared(trigrams)
 	{
-        string threeLetters;
-		unsigned int endPosition = portion * (omp_get_thread_num() + 1);
-
-		if (endPosition > contents.size())
+		#pragma omp for firstprivate(portion) private(threeLetters) schedule(static,1)
+		for (unsigned int i = 0; i < contents.size(); i += 3)
 		{
-			endPosition = contents.size();
-		}
-
-        #pragma omp for firstprivate(portion) private(threeLetters)
-		for (int i = portion * omp_get_thread_num();
-                i < portion * (omp_get_thread_num() + 1); i += 3)
-		{
-            threeLetters = string(contents.substr(i, 3));
-            trigrams[threeLetters]++;
+			threeLetters = string(contents.substr(i, 3));
+			trigrams[threeLetters]++;
 		}
 	}
 
