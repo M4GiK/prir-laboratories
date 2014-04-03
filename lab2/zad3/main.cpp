@@ -63,7 +63,7 @@ Histogram analyzeProcess(unsigned int threadCount,
 
 	#pragma omp parallel num_threads(threadCount) shared(trigrams)
 	{
-		#pragma omp for private(threeLetters) schedule(static)
+		#pragma omp for private(threeLetters) schedule(static, portion)
 		for (unsigned int i = 0; i < contents.size(); i += 3)
 		{
 			threeLetters = string(contents.substr(i, 3));
