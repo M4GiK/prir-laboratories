@@ -47,7 +47,6 @@ string getFileContents(const string fileName)
 	throw(errno);
 }
 
-
 /**
  * Analyzes trigrams for given string using OpenMP.
  *
@@ -64,7 +63,7 @@ Histogram analyzeProcess(unsigned int threadCount,
 
 	#pragma omp parallel num_threads(threadCount) shared(trigrams)
 	{
-		#pragma omp for firstprivate(portion) private(threeLetters) schedule(static,1)
+		#pragma omp for private(threeLetters) schedule(static)
 		for (unsigned int i = 0; i < contents.size(); i += 3)
 		{
 			threeLetters = string(contents.substr(i, 3));
