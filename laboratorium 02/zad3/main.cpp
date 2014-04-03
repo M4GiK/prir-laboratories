@@ -7,6 +7,7 @@
 #include <math.h>
 #include <omp.h>
 #include <string.h>
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <exception>
@@ -16,7 +17,6 @@
 #include <map>
 #include <string>
 #include <utility>
-#include <algorithm>
 
 using std::cout;
 using std::endl;
