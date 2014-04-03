@@ -3,26 +3,27 @@
 // Author      : Michał Szczygieł & Aleksander Śmierciak
 //============================================================================
 
-#define _CRT_SECURE_NO_WARNINGS
-#include <math.h>
-#include <omp.h>
-#include <string.h>
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
+#include <deque>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <omp.h>
 #include <string>
 #include <utility>
 
 using std::cout;
 using std::endl;
+using std::string;
 
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 typedef std::chrono::duration<double> Duration;
+typedef std::map<string, int> Histogram;
 
 /**
  * Gets contents of given file.
@@ -30,13 +31,13 @@ typedef std::chrono::duration<double> Duration;
  * @param filename The name of file to read.
  * @return Contents file as a string.
  */
-std::string getFileContents(const char* filename)
+string getFileContents(const string fileName)
 {
-	std::ifstream in(filename, std::ios::in);
+    std::ifstream in(fileName, std::ios::in);
 
 	if (in)
 	{
-		std::string contents((std::istreambuf_iterator<char>(in)),
+        string contents((std::istreambuf_iterator<char>(in)),
 				std::istreambuf_iterator<char>());
 		in.close();
 
@@ -55,14 +56,14 @@ std::string getFileContents(const char* filename)
  * @param portion The portion of data for one thread.
  * @return
  */
-std::map<std::string, int> analyzeProcess(unsigned int threadCount,
-		std::string contents, int portion)
+Histogram analyzeProcess(unsigned int threadCount,
+        string contents, int portion)
 {
-	std::map<std::string, int> trigram;
+    Histogram trigrams;
 
 	#pragma omp parallel num_threads(threadCount)
 	{
-		std::string threeLetters;
+        string threeLetters;
 		unsigned int endPosition = portion * (omp_get_thread_num() + 1);
 
 		if (endPosition > contents.size())
@@ -74,12 +75,12 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
 		for (int i = portion * omp_get_thread_num();
                 i < portion * (omp_get_thread_num() + 1); i += 3)
 		{
-			threeLetters = std::string(contents.substr(i, 3));
-			trigram[threeLetters]++;
+            threeLetters = string(contents.substr(i, 3));
+            trigrams[threeLetters]++;
 		}
 	}
 
-	return trigram;
+    return trigrams;
 }
 
 /**
@@ -87,7 +88,7 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  */
-void prepareData(std::string &contents)
+void prepareData(string &contents)
 {
 	int limit = contents.size() - (contents.size() % 3);
 	contents = contents.substr(0, limit);
@@ -100,7 +101,7 @@ void prepareData(std::string &contents)
  * @param contents The contents to analyze.
  * @return The size of portion data for one thread.
  */
-int getPortionforThread(unsigned int threadCount, std::string contents)
+int getPortionforThread(unsigned int threadCount, string contents)
 {
 	int portion = ceil((contents.size()) / threadCount);
 	portion += 3 - (portion % 3);
@@ -115,15 +116,15 @@ int getPortionforThread(unsigned int threadCount, std::string contents)
  * @param contents The contents to analyze.
  * @return The map with trigrams.
  */
-std::map<std::string, int> collectTrigram(unsigned int threadCount,
-		std::string contents)
+Histogram collectTrigrams(unsigned int threadCount,
+        string contents)
 {
 	prepareData(contents);
 	int portion = getPortionforThread(threadCount, contents);
-	std::map<std::string, int> trigram = analyzeProcess(threadCount, contents,
+    Histogram trigrams = analyzeProcess(threadCount, contents,
 			portion);
 
-	return trigram;
+    return trigrams;
 }
 
 /**
@@ -132,11 +133,11 @@ std::map<std::string, int> collectTrigram(unsigned int threadCount,
  * @param trigrams The map with data to convert.
  * @return Converted map into string.
  */
-std::string mapToString(std::map<std::string, int> trigrams)
+string mapToString(Histogram trigrams)
 {
-	std::string convertedMap;
+    string convertedMap;
 
-	for (std::map<std::string, int>::iterator iterator = trigrams.begin();
+    for (Histogram::iterator iterator = trigrams.begin();
 			iterator != trigrams.end(); ++iterator)
 	{
 		convertedMap += (*iterator).first + " "
@@ -154,10 +155,10 @@ std::string mapToString(std::map<std::string, int> trigrams)
  * @param contents The contents to analyze.
  * @return Data with information about processed analyze.
  */
-std::string analyzeDocument(unsigned int threadCount, std::string contents)
+string analyzeDocument(unsigned int threadCount, string contents)
 {
 	TimePoint start = std::chrono::system_clock::now();
-	std::map<std::string, int> trigrams = collectTrigram(threadCount, contents);
+    Histogram trigrams = collectTrigrams(threadCount, contents);
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
@@ -172,7 +173,7 @@ std::string analyzeDocument(unsigned int threadCount, std::string contents)
  * @param contentsBuffor The contexts for replaces line character code to spaces.
  * @return The contexts with replaced characters.
  */
-std::string replaceLines(std::string contentsBuffor)
+string replaceLines(string contentsBuffor)
 {
 	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
 	return contentsBuffor;
@@ -185,13 +186,13 @@ std::string replaceLines(std::string contentsBuffor)
  * @param nameFiles The array of name files.
  * @return The contents of read files in single string.
  */
-std::string getFilesContents(int numberOfFiles, char* nameFiles[])
+string getFilesContents(int numberOfFiles, std::deque<string> *fileNames)
 {
-	std::string contentsBuffor;
+    string contentsBuffor;
 
 	for (int i = 0; i < numberOfFiles; ++i)
 	{
-		contentsBuffor += getFileContents(nameFiles[i]);
+        contentsBuffor += getFileContents(fileNames->at(i));
 	}
 
 	return replaceLines(contentsBuffor);
@@ -204,9 +205,9 @@ std::string getFilesContents(int numberOfFiles, char* nameFiles[])
  * @param dataToSave The data to save.
  * @param langCode The name of file which will be save.
  */
-void saveToFile(std::string dataToSave, char *langCode)
+void saveToFile(string dataToSave, string langCode)
 {
-	std::ofstream outfile(strcat(langCode, ".dat"));
+    std::ofstream outfile(langCode + ".dat");
 	try
 	{
 		if (!outfile.is_open())
@@ -224,6 +225,18 @@ void saveToFile(std::string dataToSave, char *langCode)
 	}
 }
 
+std::deque<string> *retrieveFileNames(char *fileNameChains[], unsigned int size)
+{
+    std::deque<string> *fileNames = new std::deque<string>();
+    // ignore first three parameters;
+    // they are executable name, thread count and language code
+    for (unsigned int i = 3; i < size; ++i)
+    {
+        fileNames->push_back(fileNameChains[i]);
+    }
+    return fileNames;
+}
+
 /**
  * The main method of application which analyze of document based on trigram.
  *
@@ -236,7 +249,7 @@ void saveToFile(std::string dataToSave, char *langCode)
  * @return  C-standard return code: 0 if success,
  * 			other value if errors occurred during the execution.
  */
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	if (argc < 4)
 	{
@@ -245,10 +258,11 @@ int main(int argc, char* argv[])
 	}
 
 	unsigned int threadCount = std::stoi(argv[1]);
-	char *langCode = argv[2];
+    string langCode = argv[2];
+    std::deque<string> *fileNames = retrieveFileNames(argv, argc);
 
-	std::string dataToSave = analyzeDocument(threadCount,
-			getFilesContents(argc - 3, &argv[3]));
+    string dataToSave = analyzeDocument(threadCount,
+            getFilesContents(argc - 3, fileNames));
 	saveToFile(dataToSave, langCode);
 
 	return 0;
