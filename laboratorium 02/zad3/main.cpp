@@ -70,9 +70,9 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
 			endPosition = contents.size();
 		}
 
-		#pragma for default(none) shared(contents, trigram) firstprivate(portion) private(threeLetters)
+        #pragma omp for firstprivate(portion) private(threeLetters)
 		for (int i = portion * omp_get_thread_num();
-				i != portion * (omp_get_thread_num() + 1); i += 3)
+                i < portion * (omp_get_thread_num() + 1); i += 3)
 		{
 			threeLetters = std::string(contents.substr(i, 3));
 			trigram[threeLetters]++;
