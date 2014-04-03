@@ -4,18 +4,18 @@
 //============================================================================
 
 #define _CRT_SECURE_NO_WARNINGS
+#include <math.h>
+#include <omp.h>
+#include <string.h>
 #include <cerrno>
 #include <chrono>
 #include <exception>
 #include <fstream>
 #include <iostream>
-#include <omp.h>
+#include <iterator>
 #include <map>
-#include <math.h>
-#include <string.h>
-#include <stdexcept>
-#include <stdio.h>
-#include <stdexcept>
+#include <string>
+#include <utility>
 
 using std::cout;
 using std::endl;
