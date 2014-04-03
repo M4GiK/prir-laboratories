@@ -3,15 +3,16 @@
 // Author      : Michał Szczygieł & Aleksander Śmierciak
 //============================================================================
 
+#include <dirent.h>
 #include <algorithm>
-#include <cmath>
 #include <cerrno>
 #include <chrono>
-#include <fstream>
+#include <cmath>
+#include <deque>
 #include <iostream>
+#include <fstream>
 #include <iterator>
 #include <map>
-#include <omp.h>
 #include <string>
 
 using std::cout;
@@ -46,7 +47,7 @@ string getFileContents(const string &filename)
 
 	if (in)
 	{
-        string contents((std::istreambuf_iterator<char>(in)),
+		string contents((std::istreambuf_iterator<char>(in)),
 				std::istreambuf_iterator<char>());
 		in.close();
 
@@ -88,8 +89,7 @@ int getPortionforThread(unsigned int threadCount, string contents)
  * @param portion The portion of data for one thread.
  * @return
  */
-Histogram analyzeProcess(unsigned int threadCount,
-        string contents, int portion)
+Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
 {
 	Histogram trigrams;
 	string threeLetters;
@@ -104,7 +104,7 @@ Histogram analyzeProcess(unsigned int threadCount,
 		}
 	}
 
-    return trigrams;
+	return trigrams;
 }
 
 /**
@@ -114,15 +114,64 @@ Histogram analyzeProcess(unsigned int threadCount,
  * @param contents The contents to analyze.
  * @return The map with trigrams.
  */
-Histogram collectTrigrams(unsigned int threadCount,
-        string contents)
+Histogram collectTrigrams(unsigned int threadCount, string contents)
 {
 	prepareData(contents);
 	int portion = getPortionforThread(threadCount, contents);
-    Histogram trigrams = analyzeProcess(threadCount, contents,
-			portion);
+	Histogram trigrams = analyzeProcess(threadCount, contents, portion);
 
-    return trigrams;
+	return trigrams;
+}
+
+/**
+ * Gets list of all files with extension 'dat'.
+ * This method list files in directory.
+ *
+ * @return The container with all files with extension 'dat'.
+ */
+std::deque<string> *getFiles()
+{
+	std::deque<string> *files = new std::deque<string>();
+	DIR *dir;
+	struct dirent *ent;
+
+	if ((dir = opendir(".")) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			string fileName = ent->d_name;
+			if (fileName.find(".dat") != string::npos)
+			{
+				files->push_back(fileName);
+			}
+		}
+		closedir(dir);
+
+		return files;
+	}
+
+	throw(errno);
+}
+
+/**
+ * Gets contexts of all files with extension 'dat'.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param files The list of all files with extension 'dat'.
+ * @return The contexts of all files.
+ */
+std::map<string, std::map<string, int>> getContextsFiles(
+		unsigned int threadCount, std::deque<string> *files)
+{
+	std::map<string, std::map<string, int>> filesContexs;
+
+	for (std::deque<string>::iterator it = files->begin(); it != files->end();
+			++it)
+	{
+		filesContexs[*it] = collectTrigrams(threadCount, getFileContents(*it));
+	}
+
+	return filesContexs;
 }
 
 /**
@@ -133,16 +182,22 @@ Histogram collectTrigrams(unsigned int threadCount,
  */
 void analyzeDocument(unsigned int threadCount, string contents)
 {
-    Histogram trigrams = collectTrigrams(threadCount, contents);
+	Histogram trigrams = collectTrigrams(threadCount, contents);
+	std::deque<string> *files = getFiles();
+	std::map<string, std::map<string, int>> filesContexs = getContextsFiles(
+			threadCount, files);
 
 	TimePoint start = std::chrono::system_clock::now();
-	// TODO make compare
+	#pragma omp parallel for schedule(static) private(files)
+	for (int i = 0; i < files->size(); ++i)
+	{
+
+	}
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
 	cout << elapsedMillis.count() << endl;
 }
-
 
 /**
  * The main method of application which analyze of document based on trigram.
@@ -164,7 +219,7 @@ int main(int argc, char* argv[])
 	}
 
 	unsigned int threadCount = std::stoi(argv[1]);
-    string filePath = argv[2];
+	string filePath = argv[2];
 
 	analyzeDocument(threadCount, getFileContents(filePath));
 
