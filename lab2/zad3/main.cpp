@@ -55,8 +55,7 @@ string getFileContents(const string fileName)
  * @param portion The portion of data for one thread.
  * @return
  */
-Histogram analyzeProcess(unsigned int threadCount,
-        string contents, int portion)
+Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
 {
 	Histogram trigrams;
 	string threeLetters;
@@ -105,8 +104,7 @@ int getPortionforThread(unsigned int threadCount, string contents)
  * @param contents The contents to analyze.
  * @return The map with trigrams.
  */
-Histogram collectTrigrams(unsigned int threadCount,
-        string contents)
+Histogram collectTrigrams(unsigned int threadCount, string contents)
 {
 	prepareData(contents);
 	int portion = getPortionforThread(threadCount, contents);
