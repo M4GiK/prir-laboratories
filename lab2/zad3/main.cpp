@@ -104,8 +104,6 @@ void prepareData(string &contents)
 int getPortionforThread(unsigned int threadCount, string contents)
 {
 	int portion = ceil((contents.size()) / threadCount);
-	portion += 3 - (portion % 3);
-
 	return portion;
 }
 
