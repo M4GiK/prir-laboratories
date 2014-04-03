@@ -154,21 +154,50 @@ std::deque<string> *getFiles()
 }
 
 /**
+ * Gets trigrams and frequency from given file.
+ * Gets each one line and pack it into map.
+ *
+ * @param filename The name of file with trigrams.
+ * @return The histogram with information from file.
+ */
+Histogram getTrigramsFromFile(string filename)
+{
+	Histogram trigrams;
+	std::ifstream in(filename, std::ios::in);
+
+	if (in.is_open())
+	{
+		string contents;
+		while (!in.eof())
+		{
+			getline(in, contents);
+			string trigram = contents.substr(0, 3);
+			int frequency = atoi(
+					(contents.substr(3, contents.length() - 1).c_str()));
+			trigrams[trigram] = frequency;
+		}
+		in.close();
+
+		return trigrams;
+	}
+
+	throw(errno);
+}
+
+/**
  * Gets contexts of all files with extension 'dat'.
  *
- * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  * @param files The list of all files with extension 'dat'.
  * @return The contexts of all files.
  */
-std::map<string, std::map<string, int>> getContextsFiles(
-		unsigned int threadCount, std::deque<string> *files)
+std::map<string, Histogram> getContextsFiles(std::deque<string> *files)
 {
-	std::map<string, std::map<string, int>> filesContexs;
+	std::map<string, Histogram> filesContexs;
 
 	for (std::deque<string>::iterator it = files->begin(); it != files->end();
 			++it)
 	{
-		filesContexs[*it] = collectTrigrams(threadCount, getFileContents(*it));
+		filesContexs[*it] = getTrigramsFromFile(*it);
 	}
 
 	return filesContexs;
@@ -184,11 +213,11 @@ void analyzeDocument(unsigned int threadCount, string contents)
 {
 	Histogram trigrams = collectTrigrams(threadCount, contents);
 	std::deque<string> *files = getFiles();
-	std::map<string, std::map<string, int>> filesContexs = getContextsFiles(
-			threadCount, files);
+	std::map<string, std::map<string, int>> trigramsToCompare =
+			getContextsFiles(files);
 
 	TimePoint start = std::chrono::system_clock::now();
-	#pragma omp parallel for schedule(static) private(files)
+	#pragma omp parallel for shared(trigramsToCompare) private(files) schedule(dynamic)
 	for (int i = 0; i < files->size(); ++i)
 	{
 
