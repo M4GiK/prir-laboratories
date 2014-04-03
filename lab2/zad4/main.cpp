@@ -3,23 +3,24 @@
 // Author      : Michał Szczygieł & Aleksander Śmierciak
 //============================================================================
 
-#define _CRT_SECURE_NO_WARNINGS
-#include <math.h>
-#include <omp.h>
 #include <algorithm>
+#include <cmath>
 #include <cerrno>
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <map>
+#include <omp.h>
 #include <string>
-#include <iostream>
 
 using std::cout;
 using std::endl;
+using std::string;
 
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 typedef std::chrono::duration<double> Duration;
+typedef std::map<string, int> Histogram;
 
 /**
  * Replaces line character codes to spaces.
@@ -27,7 +28,7 @@ typedef std::chrono::duration<double> Duration;
  * @param contentsBuffor The contexts for replaces line character code to spaces.
  * @return The contexts with replaced characters.
  */
-std::string replaceLines(std::string contentsBuffor)
+string replaceLines(string contentsBuffor)
 {
 	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
 	return contentsBuffor;
@@ -39,13 +40,13 @@ std::string replaceLines(std::string contentsBuffor)
  * @param filename The name of file to read.
  * @return Contents file as a string.
  */
-std::string getFileContents(const char* filename)
+string getFileContents(const string &filename)
 {
 	std::ifstream in(filename, std::ios::in);
 
 	if (in)
 	{
-		std::string contents((std::istreambuf_iterator<char>(in)),
+        string contents((std::istreambuf_iterator<char>(in)),
 				std::istreambuf_iterator<char>());
 		in.close();
 
@@ -60,7 +61,7 @@ std::string getFileContents(const char* filename)
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  */
-void prepareData(std::string &contents)
+void prepareData(string &contents)
 {
 	int limit = contents.size() - (contents.size() % 3);
 	contents = contents.substr(0, limit);
@@ -73,7 +74,7 @@ void prepareData(std::string &contents)
  * @param contents The contents to analyze.
  * @return The size of portion data for one thread.
  */
-int getPortionforThread(unsigned int threadCount, std::string contents)
+int getPortionforThread(unsigned int threadCount, string contents)
 {
 	int portion = ceil((contents.size()) / threadCount);
 	portion += 3 - (portion % 3);
@@ -89,14 +90,14 @@ int getPortionforThread(unsigned int threadCount, std::string contents)
  * @param portion The portion of data for one thread.
  * @return
  */
-std::map<std::string, int> analyzeProcess(unsigned int threadCount,
-		std::string contents, int portion)
+Histogram analyzeProcess(unsigned int threadCount,
+        string contents, int portion)
 {
-	std::map<std::string, int> trigram;
+    Histogram trigrams;
 
 	#pragma omp parallel num_threads(threadCount)
 	{
-		std::string threeLetters;
+        string threeLetters;
 		unsigned int endPosition = portion * (omp_get_thread_num() + 1);
 
 		if (endPosition > contents.size())
@@ -104,16 +105,16 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
 			endPosition = contents.size();
 		}
 
-		#pragma for default(none) shared(contents, trigram) firstprivate(portion) private(threeLetters)
+        #pragma omp for firstprivate(portion) private(threeLetters)
 		for (int i = portion * omp_get_thread_num();
-				i != portion * (omp_get_thread_num() + 1); i += 3)
+                i < portion * (omp_get_thread_num() + 1); i += 3)
 		{
-			threeLetters = std::string(contents.substr(i, 3));
-			trigram[threeLetters]++;
+            threeLetters = string(contents.substr(i, 3));
+            trigrams[threeLetters]++;
 		}
 	}
 
-	return trigram;
+    return trigrams;
 }
 
 /**
@@ -123,15 +124,15 @@ std::map<std::string, int> analyzeProcess(unsigned int threadCount,
  * @param contents The contents to analyze.
  * @return The map with trigrams.
  */
-std::map<std::string, int> collectTrigram(unsigned int threadCount,
-		std::string contents)
+Histogram collectTrigrams(unsigned int threadCount,
+        string contents)
 {
 	prepareData(contents);
 	int portion = getPortionforThread(threadCount, contents);
-	std::map<std::string, int> trigram = analyzeProcess(threadCount, contents,
+    Histogram trigrams = analyzeProcess(threadCount, contents,
 			portion);
 
-	return trigram;
+    return trigrams;
 }
 
 /**
@@ -140,10 +141,9 @@ std::map<std::string, int> collectTrigram(unsigned int threadCount,
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  * @param contents The contents to analyze.
  */
-void analyzeDocument(unsigned int threadCount, std::string contents)
+void analyzeDocument(unsigned int threadCount, string contents)
 {
-
-	std::map<std::string, int> trigrams = collectTrigram(threadCount, contents);
+    Histogram trigrams = collectTrigrams(threadCount, contents);
 
 	TimePoint start = std::chrono::system_clock::now();
 	// TODO make compare
@@ -151,7 +151,6 @@ void analyzeDocument(unsigned int threadCount, std::string contents)
 
 	Duration elapsedMillis = end - start;
 	cout << elapsedMillis.count() << endl;
-
 }
 
 
@@ -175,7 +174,7 @@ int main(int argc, char* argv[])
 	}
 
 	unsigned int threadCount = std::stoi(argv[1]);
-	char *filePath = argv[2];
+    string filePath = argv[2];
 
 	analyzeDocument(threadCount, getFileContents(filePath));
 
