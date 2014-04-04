@@ -8,9 +8,10 @@
 #include <cerrno>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <deque>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <string>
@@ -171,10 +172,13 @@ Histogram getTrigramsFromFile(string filename)
 		while (!in.eof())
 		{
 			getline(in, contents);
-			string trigram = contents.substr(0, 3);
-			int frequency = atoi(
-					(contents.substr(3, contents.length() - 1).c_str()));
-			trigrams[trigram] = frequency;
+			if (contents.size() > 3)
+			{
+				string trigram = contents.substr(0, 3);
+				int frequency = atoi(
+						(contents.substr(3, contents.length() - 1).c_str()));
+				trigrams[trigram] = frequency;
+			}
 		}
 		in.close();
 
@@ -204,6 +208,51 @@ std::map<string, Histogram> getContextsFiles(std::deque<string> *files)
 }
 
 /**
+ * Compares trigrams, and collects coverage.
+ *
+ * @param trigrams The trigrams analyzed as execution parameter.
+ * @param trigramsToCompare Dataset of trigrams to compare.
+ * @return The coverage in percent.
+ */
+double compareTrigrams(Histogram trigrams, Histogram trigramsToCompare)
+{
+	int maxCoverage = trigrams.size();
+	int currentCoverage = 0;
+
+	for (Histogram::iterator iti = trigrams.begin(); iti != trigrams.end();
+			++iti)
+	{
+		for (Histogram::iterator itj = trigramsToCompare.begin();
+				itj != trigramsToCompare.end(); ++itj)
+		{
+			if((*iti).first == (*itj).first)
+			{
+				currentCoverage++;
+			}
+		}
+	}
+
+	return (100 * currentCoverage) / (double) maxCoverage;
+}
+
+/**
+ * Prints information about analyze and compare process.
+ *
+ * @param elapsedMillis Time to display.
+ * @param result The result to display.
+ */
+void printInformations(Duration elapsedMillis, std::map<string, double> result)
+{
+	for (std::map<string, double>::iterator it = result.begin();
+			it != result.end(); ++it)
+	{
+		cout << (*it).first << " " << (*it).second << "%" << endl;
+	}
+
+	cout << elapsedMillis.count() << endl;
+}
+
+/**
  * This method analyzes the given document. Compare with another file to estimate the best adhesion.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
@@ -213,19 +262,20 @@ void analyzeDocument(unsigned int threadCount, string contents)
 {
 	Histogram trigrams = collectTrigrams(threadCount, contents);
 	std::deque<string> *files = getFiles();
-	std::map<string, std::map<string, int>> trigramsToCompare =
-			getContextsFiles(files);
+	std::map<string, Histogram> trigramsToCompare = getContextsFiles(files);
+	std::map<string, double> result;
 
 	TimePoint start = std::chrono::system_clock::now();
-	#pragma omp parallel for shared(trigramsToCompare) private(files) schedule(dynamic)
-	for (int i = 0; i < files->size(); ++i)
+	#pragma omp parallel for shared(trigramsToCompare, result) firstprivate(files) schedule(dynamic)
+	for (unsigned int i = 0; i < files->size(); ++i)
 	{
-
+		result[files->at(i)] = compareTrigrams(trigrams, trigramsToCompare[files->at(i)]);
 	}
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
-	cout << elapsedMillis.count() << endl;
+
+	printInformations(elapsedMillis, result);
 }
 
 /**
