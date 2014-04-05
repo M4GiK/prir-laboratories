@@ -55,32 +55,27 @@ string getFileContents(const string fileName)
  * @param portion The portion of data for one thread.
  * @return
  */
-Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
+Histogram analyzeProcess(string contents, unsigned int threadCount)
 {
-	Histogram trigrams;
-	string threeLetters;
-
-	#pragma omp parallel num_threads(threadCount) shared(trigrams)
-	{
-		#pragma omp for private(threeLetters) schedule(static, portion)
-		for (unsigned int i = 0; i < contents.size(); i += 3)
-		{
-			threeLetters = string(contents.substr(i, 3));
-			trigrams[threeLetters]++;
-		}
-	}
-
-    return trigrams;
+    Histogram trigramDistribution;
+    #pragma omp parallel for shared(trigramDistribution) \
+                num_threads(threadCount) schedule(static)
+    for (unsigned int i = 0; i < contents.size(); i += 3)
+    {
+        string trigram = string(contents.substr(i, 3));
+        trigramDistribution[trigram]++;
+    }
+    return trigramDistribution;
 }
 
 /**
- * Prepares data to analyze process. Cuts the size of result to fit modulo 3.
+ * Prepares data to analyze process. Cuts the size of result to fit modulo threadCount.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  */
-void prepareData(string &contents)
+void prepareData(string &contents, unsigned int threadCount)
 {
-	int limit = contents.size() - (contents.size() % 3);
+    int limit = contents.size() - (contents.size() % threadCount);
 	contents = contents.substr(0, limit);
 }
 
@@ -104,12 +99,10 @@ int getPortionforThread(unsigned int threadCount, string contents)
  * @param contents The contents to analyze.
  * @return The map with trigrams.
  */
-Histogram collectTrigrams(unsigned int threadCount, string contents)
+Histogram collectTrigrams(string contents, unsigned int threadCount)
 {
-	prepareData(contents);
-	int portion = getPortionforThread(threadCount, contents);
-    Histogram trigrams = analyzeProcess(threadCount, contents,
-			portion);
+    prepareData(contents, threadCount);
+    Histogram trigrams = analyzeProcess(contents, threadCount);
 
     return trigrams;
 }
@@ -142,10 +135,10 @@ string mapToString(Histogram trigrams)
  * @param contents The contents to analyze.
  * @return Data with information about processed analyze.
  */
-string analyzeDocument(unsigned int threadCount, string contents)
+string analyzeDocument(string contents, unsigned int threadCount)
 {
 	TimePoint start = std::chrono::system_clock::now();
-    Histogram trigrams = collectTrigrams(threadCount, contents);
+    Histogram trigrams = collectTrigrams(contents, threadCount);
 	TimePoint end = std::chrono::system_clock::now();
 
 	Duration elapsedMillis = end - start;
@@ -248,8 +241,11 @@ int main(int argc, char *argv[])
     string langCode = argv[2];
     std::deque<string> *fileNames = retrieveFileNames(argv, argc);
 
-    string dataToSave = analyzeDocument(threadCount,
-            getFilesContents(argc - 3, fileNames));
+    string filesContents = getFilesContents(argc - 3, fileNames);
+    string dataToSave = analyzeDocument(filesContents, threadCount);
+
+    delete fileNames;
+
 	saveToFile(dataToSave, langCode);
 
 	return 0;
