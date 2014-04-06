@@ -75,6 +75,18 @@ void saveToFile(string dataToSave, string langCode)
 }
 
 /**
+ * Calculates data portion to fit modulo 3 for threads.
+ *
+ * @param threadCount Number of threads to spawn in the parallel OpenMP block.
+ * @param contents The contents to analyze.
+ * @return The size of portion data for one thread.
+ */
+int calculateChunkSize(string contents, unsigned int threadCount)
+{
+    return ceil(((double)contents.size()) / threadCount);
+}
+
+/**
  * Analyzes trigrams for given string using OpenMP.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
@@ -85,12 +97,22 @@ void saveToFile(string dataToSave, string langCode)
 Histogram analyzeInput(string contents, unsigned int threadCount)
 {
     Histogram trigramDistribution;
-    #pragma omp parallel for shared(trigramDistribution) \
-                num_threads(threadCount) schedule(static)
-    for (unsigned int i = 0; i < contents.size(); i += 3)
+
+    unsigned int chunkSize = calculateChunkSize(contents, threadCount);
+
+    #pragma omp parallel
     {
-        string trigram = string(contents.substr(i, 3));
-        trigramDistribution[trigram]++;
+        unsigned int threadNumber = omp_get_thread_num();
+
+        unsigned int startPos = chunkSize * threadNumber;
+        unsigned int endPos = chunkSize * (threadNumber + 1);
+        endPos = std::min(endPos, (unsigned int)contents.size());
+
+        for (unsigned int i = startPos; i < endPos; i += 3)
+        {
+            string trigram = contents.substr(i, 3);
+            ++trigramDistribution[trigram];
+        }
     }
     return trigramDistribution;
 }
@@ -104,19 +126,6 @@ void prepareData(string &contents, unsigned int threadCount)
 {
     int limit = contents.size() - (contents.size() % threadCount);
 	contents = contents.substr(0, limit);
-}
-
-/**
- * Calculates data portion to fit modulo 3 for threads.
- *
- * @param threadCount Number of threads to spawn in the parallel OpenMP block.
- * @param contents The contents to analyze.
- * @return The size of portion data for one thread.
- */
-int getPortionforThread(unsigned int threadCount, string contents)
-{
-	int portion = ceil((contents.size()) / threadCount);
-	return portion;
 }
 
 /**
@@ -233,7 +242,7 @@ int main(int argc, char *argv[])
 {
 	if (argc < 4)
 	{
-		cout << "Usage: ./analiza_omp <threadCount> <langCode> <file> [files...]" << endl;
+        std::cerr << "Usage: ./analiza_omp <threadCount> <langCode> <file> [files...]" << endl;
 		return -1;
 	}
 
