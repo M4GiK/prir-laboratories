@@ -59,13 +59,13 @@ string getFileContents(const string &filename)
 }
 
 /**
- * Prepares data to analyze process. Cuts the size of result to fit modulo 3.
+ * Prepares data to analyze process. Cuts the size of result to fit modulo threadCount.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
  */
-void prepareData(string &contents)
+void prepareData(string &contents, unsigned int threadCount)
 {
-	int limit = contents.size() - (contents.size() % 3);
+    int limit = contents.size() - (contents.size() % threadCount);
 	contents = contents.substr(0, limit);
 }
 
@@ -117,7 +117,7 @@ Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
  */
 Histogram collectTrigrams(unsigned int threadCount, string contents)
 {
-	prepareData(contents);
+    prepareData(contents, threadCount);
 	int portion = getPortionforThread(threadCount, contents);
 	Histogram trigrams = analyzeProcess(threadCount, contents, portion);
 
@@ -265,8 +265,8 @@ void analyzeDocument(unsigned int threadCount, string contents)
 	std::map<string, Histogram> trigramsToCompare = getContextsFiles(files);
 	std::map<string, double> result;
 
-	TimePoint start = std::chrono::system_clock::now();
-	#pragma omp parallel for shared(trigramsToCompare, result) firstprivate(files) schedule(dynamic)
+    TimePoint start = std::chrono::system_clock::now();
+    #pragma omp parallel for num_threads(threadCount) shared(trigramsToCompare, result) firstprivate(files) schedule(dynamic)
 	for (unsigned int i = 0; i < files->size(); ++i)
 	{
 		result[files->at(i)] = compareTrigrams(trigrams, trigramsToCompare[files->at(i)]);
