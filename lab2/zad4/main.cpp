@@ -30,7 +30,7 @@ typedef std::map<string, int> Histogram;
  * @param contentsBuffor The contexts for replaces line character code to spaces.
  * @return The contexts with replaced characters.
  */
-string replaceLines(string contentsBuffor)
+string removeLineEndings(string contentsBuffor)
 {
 	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
 	return contentsBuffor;
@@ -42,7 +42,7 @@ string replaceLines(string contentsBuffor)
  * @param filename The name of file to read.
  * @return Contents file as a string.
  */
-string getFileContents(const string &filename)
+string readTextFromFile(const string &filename)
 {
 	std::ifstream in(filename, std::ios::in);
 
@@ -52,7 +52,7 @@ string getFileContents(const string &filename)
 				std::istreambuf_iterator<char>());
 		in.close();
 
-		return replaceLines(contents);
+		return removeLineEndings(contents);
 	}
 
 	throw(errno);
@@ -76,7 +76,7 @@ void prepareData(string &contents, unsigned int threadCount)
  * @param contents The contents to analyze.
  * @return The size of portion data for one thread.
  */
-int getPortionforThread(unsigned int threadCount, string contents)
+int calculateChunkSize(unsigned int threadCount, string contents)
 {
 	int portion = ceil((contents.size()) / threadCount);
 	return portion;
@@ -90,7 +90,7 @@ int getPortionforThread(unsigned int threadCount, string contents)
  * @param portion The portion of data for one thread.
  * @return
  */
-Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
+Histogram analyzeInput(unsigned int threadCount, string contents, int portion)
 {
 	Histogram trigrams;
 	string threeLetters;
@@ -118,8 +118,8 @@ Histogram analyzeProcess(unsigned int threadCount, string contents, int portion)
 Histogram collectTrigrams(unsigned int threadCount, string contents)
 {
     prepareData(contents, threadCount);
-	int portion = getPortionforThread(threadCount, contents);
-	Histogram trigrams = analyzeProcess(threadCount, contents, portion);
+	int portion = calculateChunkSize(threadCount, contents);
+	Histogram trigrams = analyzeInput(threadCount, contents, portion);
 
 	return trigrams;
 }
@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
 	unsigned int threadCount = std::stoi(argv[1]);
 	string filePath = argv[2];
 
-	analyzeDocument(threadCount, getFileContents(filePath));
+	analyzeDocument(threadCount, readTextFromFile(filePath));
 
 	return 0;
 }
