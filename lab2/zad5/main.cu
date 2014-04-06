@@ -91,7 +91,7 @@ float readExecutionTime(cudaEvent_t &start, cudaEvent_t &stop)
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2)
+	if (argc != 3)
 	{
 		std::cerr << "Usage: ./macierz_cuda threadCount matrixSize" << endl;
 		return -1;
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 	unsigned int threadCount = atoi(argv[2]);
 
 	dim3 dimBlock;
-	dimBlock.x = threadCount;
-	dimBlock.y = 4;
+	dimBlock.x = matrixSize;
+	dimBlock.y = matrixSize;
 
     float *hostA = initializeMatrix(matrixSize);
     float *hostB = initializeMatrix(matrixSize);
