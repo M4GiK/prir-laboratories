@@ -31,7 +31,7 @@ typedef std::map<string, int> Histogram;
  * @param filename The name of file to read.
  * @return Contents file as a string.
  */
-string getFileContents(const string fileName)
+string readTextFromFile(const string fileName)
 {
     std::ifstream in(fileName, std::ios::in);
 
@@ -48,6 +48,33 @@ string getFileContents(const string fileName)
 }
 
 /**
+ * Saves given data to file.
+ * This method also appends extension "dat" for name which is langCode.
+ *
+ * @param dataToSave The data to save.
+ * @param langCode The name of file which will be save.
+ */
+void saveToFile(string dataToSave, string langCode)
+{
+    std::ofstream outfile(langCode + ".dat");
+    try
+    {
+        if (!outfile.is_open())
+        {
+            std::cerr << "Couldn't open '" << langCode << endl;
+        }
+        else
+        {
+            outfile << dataToSave << endl;
+            outfile.close();
+        }
+    } catch (const std::exception& e)
+    {
+        std::cerr << "\n*** ERROR: " << e.what() << endl;
+    }
+}
+
+/**
  * Analyzes trigrams for given string using OpenMP.
  *
  * @param threadCount Number of threads to spawn in the parallel OpenMP block.
@@ -55,7 +82,7 @@ string getFileContents(const string fileName)
  * @param portion The portion of data for one thread.
  * @return
  */
-Histogram analyzeProcess(string contents, unsigned int threadCount)
+Histogram analyzeInput(string contents, unsigned int threadCount)
 {
     Histogram trigramDistribution;
     #pragma omp parallel for shared(trigramDistribution) \
@@ -102,7 +129,7 @@ int getPortionforThread(unsigned int threadCount, string contents)
 Histogram collectTrigrams(string contents, unsigned int threadCount)
 {
     prepareData(contents, threadCount);
-    Histogram trigrams = analyzeProcess(contents, threadCount);
+    Histogram trigrams = analyzeInput(contents, threadCount);
 
     return trigrams;
 }
@@ -153,7 +180,7 @@ string analyzeDocument(string contents, unsigned int threadCount)
  * @param contentsBuffor The contexts for replaces line character code to spaces.
  * @return The contexts with replaced characters.
  */
-string replaceLines(string contentsBuffor)
+string removeLineEndings(string contentsBuffor)
 {
 	replace(contentsBuffor.begin(), contentsBuffor.end(), '\n', ' ');
 	return contentsBuffor;
@@ -166,53 +193,26 @@ string replaceLines(string contentsBuffor)
  * @param nameFiles The array of name files.
  * @return The contents of read files in single string.
  */
-string getFilesContents(int numberOfFiles, std::deque<string> *fileNames)
+string readTextFromFiles(std::deque<string> fileNames)
 {
-    string contentsBuffor;
+    string filesContent;
 
-	for (int i = 0; i < numberOfFiles; ++i)
+    for (unsigned int i = 0; i < fileNames.size(); ++i)
 	{
-        contentsBuffor += getFileContents(fileNames->at(i));
+        filesContent += readTextFromFile(fileNames.at(i));
 	}
 
-	return replaceLines(contentsBuffor);
+    return filesContent;
 }
 
-/**
- * Saves given data to file.
- * This method also appends extension "dat" for name which is langCode.
- *
- * @param dataToSave The data to save.
- * @param langCode The name of file which will be save.
- */
-void saveToFile(string dataToSave, string langCode)
+std::deque<string> retrieveFileNames(char *fileNameChains[], unsigned int size)
 {
-    std::ofstream outfile(langCode + ".dat");
-	try
-	{
-		if (!outfile.is_open())
-		{
-			std::cerr << "Couldn't open '" << langCode << endl;
-		}
-		else
-		{
-			outfile << dataToSave << endl;
-			outfile.close();
-		}
-	} catch (const std::exception& e)
-	{
-		std::cerr << "\n*** ERROR: " << e.what() << endl;
-	}
-}
-
-std::deque<string> *retrieveFileNames(char *fileNameChains[], unsigned int size)
-{
-    std::deque<string> *fileNames = new std::deque<string>();
+    std::deque<string> fileNames;
     // ignore first three parameters;
     // they are executable name, thread count and language code
     for (unsigned int i = 3; i < size; ++i)
     {
-        fileNames->push_back(fileNameChains[i]);
+        fileNames.push_back(fileNameChains[i]);
     }
     return fileNames;
 }
@@ -239,12 +239,14 @@ int main(int argc, char *argv[])
 
 	unsigned int threadCount = std::stoi(argv[1]);
     string langCode = argv[2];
-    std::deque<string> *fileNames = retrieveFileNames(argv, argc);
 
-    string filesContents = getFilesContents(argc - 3, fileNames);
-    string dataToSave = analyzeDocument(filesContents, threadCount);
+    std::deque<string> fileNames = retrieveFileNames(argv, argc);
+    string filesContent = readTextFromFiles(fileNames);
 
-    delete fileNames;
+    string textFromFiles = removeLineEndings(filesContent);
+
+    string dataToSave = analyzeDocument(textFromFiles, threadCount);
+
 
 	saveToFile(dataToSave, langCode);
 
