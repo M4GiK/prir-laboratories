@@ -8,16 +8,16 @@
 #include "VideoOperations.h"
 
 /**
- *
+ * The constructor for VideoOperations.
  */
 VideoOperations::VideoOperations(std::string inputFile, std::string outputFile)
 {
 	VideoOperations::openVideo(inputFile);
-
+	VideoOperations::prepareOutputVideo(outputFile);
 }
 
 /**
- *
+ * The destructor for VideoOperations.
  */
 VideoOperations::~VideoOperations()
 {
