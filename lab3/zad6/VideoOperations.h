@@ -20,6 +20,8 @@ public:
 
 	VideoOperations(std::string inputFile, std::string outputFile);
 	virtual ~VideoOperations();
+	bool readFrames(cv::Mat input);
+	void saveFrames(cv::Mat output);
 	void openVideo(std::string inputFile);
 	cv::VideoCapture openVideo(std::string inputFile);
 	cv::VideoWriter prepareOutputVideo(std::string outputFile);

@@ -88,3 +88,24 @@ cv::VideoWriter prepareOutputVideo(std::string outputFile)
 	}
 }
 
+/**
+ * Reads frames from given matrix.
+ *
+ * @param input The matrix to read.
+ * @return True if can read input stream, false if can't or end given input stream.
+ */
+bool readFrames(cv::Mat input)
+{
+	return VideoOperations::inputVideo.read(input);
+}
+
+/**
+ * This method saves frames from given matrix.
+ *
+ * @param output The matrix with data.
+ */
+void saveFrames(cv::Mat output)
+{
+	VideoOperations::outputVideo.write(output);
+}
+
