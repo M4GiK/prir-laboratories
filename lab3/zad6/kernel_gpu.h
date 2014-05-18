@@ -8,11 +8,21 @@
 /**
  * Header for the method of doing a gaussian blur.
  *
- * @param image
- * @param width
- * @param height
  * @param blocks
  * @param block_size
+ * @param input
+ * @param output
+ * @param width
+ * @param height
+ * @param inputWidthStep
+ * @param kernel
+ * @param kernelSize
+ * @param gridWidth
+ * @param numBlocks
  */
-extern "C" void cudaGauss(float* image, int width, int height, dim3 blocks,
-		dim3 block_size);
+extern "C" void cudaGauss(dim3 blocks, dim3 block_size, unsigned char* input,
+		unsigned char* output, int width, int height, int inputWidthStep,
+		int *kernel, int kernelSize, int gridWidth, int numBlocks);
+
+/** Global number of blocks **/
+__device__ unsigned int blockCounter;

@@ -31,6 +31,8 @@ VideoOperations::~VideoOperations()
  */
 void openVideo(std::string inputFile)
 {
+	assertFileExist(inputFile);
+
 	VideoOperations::inputVideo = cv::VideoCapture(inputFile);
 	if (!VideoOperations::inputVideo.isOpened())
 	{
@@ -47,6 +49,8 @@ void openVideo(std::string inputFile)
  */
 cv::VideoCapture openVideo(std::string inputFile)
 {
+	assertFileExist(inputFile);
+
 	VideoOperations::inputVideo = cv::VideoCapture(inputFile);
 	if (VideoOperations::inputVideo.isOpened())
 	{
@@ -68,15 +72,15 @@ cv::VideoCapture openVideo(std::string inputFile)
  */
 cv::VideoWriter prepareOutputVideo(std::string outputFile)
 {
-	int outWidth = (int) (VideoOperations::inputVideo.get(
+	VideoOperations::outWidth = (int) (VideoOperations::inputVideo.get(
 			CV_CAP_PROP_FRAME_WIDTH));
-	int outHeight = (int) (VideoOperations::inputVideo.get(
+	VideoOperations::outHeight = (int) (VideoOperations::inputVideo.get(
 			CV_CAP_PROP_FRAME_HEIGHT));
 
 	VideoOperations::outputVideo = cv::VideoWriter(outputFile,
 			(int) VideoOperations::inputVideo.get(CV_CAP_PROP_FOURCC),
 			(int) VideoOperations::inputVideo.get(CV_CAP_PROP_FPS),
-			cv::Size(outWidth, outHeight));
+			cv::Size(VideoOperations::outWidth, VideoOperations::outHeight));
 	if (VideoOperations::outputVideo.isOpened())
 	{
 		return VideoOperations::outputVideo;
@@ -109,3 +113,20 @@ void saveFrames(cv::Mat output)
 	VideoOperations::outputVideo.write(output);
 }
 
+/**
+ * This method checks if given file path is existing.
+ *
+ * @param filePath The file path to check.
+ */
+void assertFileExist(const std::string filePath)
+{
+	std::ifstream fileStream(filePath);
+	if (!fileStream.good())
+	{
+		throw new std::invalid_argument("Input file was not found.");
+	}
+	else
+	{
+		fileStream.close();
+	}
+}
