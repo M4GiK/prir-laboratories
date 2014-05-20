@@ -105,20 +105,14 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
 			cudaMemcpyHostToDevice);
 
 	int *devKernel;
-	int hostKernel[5][5] =
-	{
-	{ 0, 1, 2, 1, 0 },
-	{ 1, 4, 8, 4, 1 },
-	{ 2, 8, 16, 8, 2 },
-	{ 1, 4, 8, 4, 1 },
-	{ 0, 1, 2, 1, 0 } };
+	int hostKernel[5][5] = GAUSS;
 
 	// Prepare memory for calculation
 	int memorySize = 5 * 5 * sizeof(int);
 	cudaMalloc((void**) &devKernel, memorySize);
 	cudaMemcpy(devKernel, hostKernel, memorySize, cudaMemcpyHostToDevice);
 
-	// Apply filter
+	// Apply filter Gauss blur
 	cudaGauss(blocksPerKernel, dimBlock, inputPixel, outputPixel, input.cols,
 			input.rows, input.step, devKernel, 5, dimGrid.x,
 			dimGrid.x * dimGrid.y);
