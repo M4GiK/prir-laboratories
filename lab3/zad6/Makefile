@@ -14,10 +14,10 @@ CUDAFLAGS= -arch sm_20
 #endif
 
 all:
-	$(CXX) $(CFLAGS) -c main.cpp -o main.o -c  
+	$(CXX) $(CFLAGS) -c main.cpp -o main.o  
 	$(CXX) $(CFLAGS) -c VideoOperations.cpp -o video.o
 	nvcc $(CFLAGS) $(CUDAFLAGS) -c kernel_gpu.cu -o kernel_gpu.o
-	$(CXX) $(LDFLAGS) main.o kernel_gpu.o video.o -o gauss_gpu 
+	$(CXX) $(LDFLAGS) video.o main.o kernel_gpu.o -o gauss_gpu
 
 clean:
 	rm -f *.o gauss_gpu
