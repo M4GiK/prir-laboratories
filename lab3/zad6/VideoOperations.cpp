@@ -55,7 +55,7 @@ void openVideo(std::string inputFile)
  * @param inputFile The path to file.
  * @return The descriptor for video file capture.
  */
-cv::VideoCapture openVideo(std::string inputFile)
+cv::VideoCapture getOpenVideo(std::string inputFile)
 {
 	assertFileExist(inputFile);
 

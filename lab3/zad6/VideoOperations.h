@@ -28,7 +28,7 @@ public:
 	void assertFileExist(const std::string filePath);
 	void release();
 	void openVideo(std::string inputFile);
-	cv::VideoCapture openVideo(std::string inputFile);
+	cv::VideoCapture getOpenVideo(std::string inputFile);
 	cv::VideoWriter prepareOutputVideo(std::string outputFile);
 };
 
