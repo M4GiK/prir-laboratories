@@ -105,7 +105,8 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
 			cudaMemcpyHostToDevice);
 
 	int *devKernel;
-	int hostKernel[5][5] = GAUSS;
+	int hostKernel[5][5];
+	memcpy(hostKernel, GAUSS, sizeof(GAUSS));
 
 	// Prepare memory for calculation
 	int memorySize = 5 * 5 * sizeof(int);
