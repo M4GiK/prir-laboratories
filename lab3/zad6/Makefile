@@ -13,7 +13,8 @@ LDFLAGS= -L$(CUDA_INSTALL_PATH)/lib -lcudart -L/usr/local/lib -lopencv_core -lcv
 #endif
 
 all:
-	$(CXX) $(CFLAGS) -c main.cpp -o main.o -c VideoOperations.cpp -o video.o
+	$(CXX) $(CFLAGS) -c main.cpp -o main.o -c  
+	$(CXX) $(CFLAGS) -c VideoOperations.cpp -o video.o
 	nvcc $(CUDAFLAGS) -c kernel_gpu.cu -o kernel_gpu.o
 	$(CXX) $(LDFLAGS) main.o kernel_gpu.o video.o -o gauss_gpu 
 
