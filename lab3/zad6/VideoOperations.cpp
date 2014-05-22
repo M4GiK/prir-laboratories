@@ -26,6 +26,25 @@ VideoOperations::~VideoOperations()
 }
 
 /**
+ * This method checks if given file path is existing.
+ *
+ * @param filePath The file path to check.
+ */
+void assertFileExist(const std::string filePath)
+{
+	std::ifstream fileStream(filePath.c_str());
+	if (!fileStream.good())
+	{
+		std::cerr << "Input file was not found: " << filePath << std::endl;
+		throw(errno);
+	}
+	else
+	{
+		fileStream.close();
+	}
+}
+
+/**
  * This method closes video file or capturing device.
  */
 void release()
@@ -47,6 +66,7 @@ void openVideo(std::string inputFile)
 	{
 		std::cerr << "Could not open the input video: " << inputFile
 				<< std::endl;
+		throw(errno);
 	}
 }
 
@@ -69,7 +89,7 @@ cv::VideoCapture getOpenVideo(std::string inputFile)
 	{
 		std::cerr << "Could not open the input video: " << inputFile
 				<< std::endl;
-		return -1;
+		throw(errno);
 	}
 }
 
@@ -97,7 +117,7 @@ cv::VideoWriter prepareOutputVideo(std::string outputFile)
 	else
 	{
 		std::cerr << "Failed opening file: " << outputFile << std::endl;
-		return -1;
+		throw(errno);
 	}
 }
 
@@ -122,20 +142,3 @@ void saveFrames(cv::Mat output)
 	VideoOperations::outputVideo.write(output);
 }
 
-/**
- * This method checks if given file path is existing.
- *
- * @param filePath The file path to check.
- */
-void assertFileExist(const std::string filePath)
-{
-	std::ifstream fileStream(filePath);
-	if (!fileStream.good())
-	{
-		throw new std::invalid_argument("Input file was not found.");
-	}
-	else
-	{
-		fileStream.close();
-	}
-}
