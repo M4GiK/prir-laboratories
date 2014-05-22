@@ -21,114 +21,12 @@ using std::endl;
 
 typedef struct timeb TimePoint;
 
-/** Grid variables **/
-static int threadsOnX = 1;
-
-/** Grid variables **/
-static int threadsOnY = 1;
-
-/** Blocks assigned per kernel **/
-static int blocksPerKernel = 1;
 
 /** Time stamp for time calculation **/
 TimePoint startTime, stopTime;
 
-/**
- * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
- *
- * @param threadCount The amount of threads.
- */
-void prepareGrid(unsigned int threadCount)
-{
-	// Round the number of threads
-	if ((threadCount % 2) == 1)
-	{
-		++threadCount;
-	}
 
-	// Divide into blocks
-	// TODO to refactoring!
-	for (int i = 512; i > 0; i--)
-	{
-		double blocks = (double) threadCount / i;
 
-		if (blocks == (int) (blocks))
-		{
-			blocksPerKernel = int(blocks);
-
-			double divThreads = sqrt(i);
-			if (divThreads == int(divThreads))
-			{
-				threadsOnX = int(divThreads);
-				threadsOnY = int(divThreads);
-			}
-			else
-			{
-				threadsOnX = i;
-				threadsOnY = 1;
-			}
-
-			break;
-		}
-	}
-}
-
-/**
- * TODO add comments.
- *
- * @param input
- * @param output
- */
-void performKernelCalculation(cv::Mat& input, cv::Mat& output)
-{
-	unsigned char *inputPixel, *outputPixel;
-
-	int inputBytes = input.rows * input.step;
-	int outputBytes = output.rows * output.step;
-
-	// Prepare grid for kernel.
-	dim3 dimBlock(threadsOnX, threadsOnY);
-	dim3 dimGrid(ceil((double) output.cols / dimBlock.x),
-			ceil((double) output.rows / dimBlock.y));
-
-	// Allocate memory for frame calculation.
-	cudaMalloc((void**) &inputPixel, inputBytes);
-	cudaMalloc((void**) &outputPixel, outputBytes);
-
-	// Reset output memory to 0.
-	cudaMemset(outputPixel, 0, outputBytes);
-
-	// Copy input frame to GPU memory.
-	cudaMemcpy(inputPixel, input.ptr(), inputBytes, cudaMemcpyHostToDevice);
-	unsigned int hostCounter = 0;
-	cudaMemcpyToSymbol(blockCounter, &hostCounter, sizeof(unsigned int), 0,
-			cudaMemcpyHostToDevice);
-
-	// Prepare table to gauss conversion.
-	int *devKernel;
-	int hostKernel[5][5];
-	memcpy(hostKernel, GAUSS, sizeof(GAUSS));
-
-	// Prepare memory for calculation
-	int memorySize = 5 * 5 * sizeof(int);
-	cudaMalloc((void**) &devKernel, memorySize);
-	cudaMemcpy(devKernel, hostKernel, memorySize, cudaMemcpyHostToDevice);
-
-	// Apply filter Gauss blur.
-	cudaGauss(blocksPerKernel, dimBlock, inputPixel, outputPixel, input.cols,
-			input.rows, input.step, devKernel, 5, dimGrid.x,
-			dimGrid.x * dimGrid.y);
-
-	// Synchronize the device.
-	cudaDeviceSynchronize();
-
-	// Copy result to host memory.
-	cudaMemcpy(output.ptr(), outputPixel, outputBytes, cudaMemcpyDeviceToHost);
-
-	// Free the memory.
-	cudaFree(inputPixel);
-	cudaFree(outputPixel);
-}
 
 /**
  * TODO add comments.
@@ -137,8 +35,7 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
  * @param videoInput
  * @param videoOutput
  */
-void performGaussianBlur(std::string videoInput,
-		std::string videoOutput)
+void performGaussianBlur(std::string videoInput, std::string videoOutput)
 {
 	VideoOperations *videoOperations = new VideoOperations(videoInput,
 			videoOutput);
@@ -149,7 +46,7 @@ void performGaussianBlur(std::string videoInput,
 	while (videoOperations->readFrames(input))
 	{
 		cv::Mat output(videoOperations->outHeight, videoOperations->outWidth,
-				cv::CV_8UC3);
+				CV_8UC3);
 		performKernelCalculation(input, output);
 	}
 

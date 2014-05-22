@@ -4,6 +4,7 @@
 //============================================================================
 #include <cuda_runtime_api.h>
 #include <cuda.h>
+#include "VideoOperations.h"
 
 /**
  * Header for the method of doing a gaussian blur.
@@ -24,9 +25,6 @@ extern "C" void cudaGauss(dim3 blocks, dim3 block_size, unsigned char* input,
 		unsigned char* output, int width, int height, int inputWidthStep,
 		int *kernel, int kernelSize, int gridWidth, int numBlocks);
 
-/** Global number of blocks **/
-__device__ unsigned int blockCounter;
-
 /**  Filter table for Gauss blur **/
 static int GAUSS[5][5] = 	{
 		{ 0, 1, 2, 1, 0 },
@@ -34,3 +32,6 @@ static int GAUSS[5][5] = 	{
 		{ 2, 8, 16, 8, 2 },
 		{ 1, 4, 8, 4, 1 },
 		{ 0, 1, 2, 1, 0 } };
+
+void prepareGrid(unsigned int threadCount);
+void performKernelCalculation(cv::Mat& input, cv::Mat& output);
