@@ -1,9 +1,10 @@
 CXX=g++
 
 CUDA_INSTALL_PATH=/usr/local/cuda
-CFLAGS= -I. -I$(CUDA_INSTALL_PATH)/include -I/usr/include/opencv -I/usr/local/include/opencv
-LDFLAGS= -L$(CUDA_INSTALL_PATH)/lib -lcudart -L/usr/local/lib -lopencv_core -lcv -lhighgui 
-#CUDAFLAGS= -gencode arch=compute_20,code=sm_2
+OPENVC_INSTALL_PATH=/usr/local/include/opencv
+CFLAGS= -I. -I$(CUDA_INSTALL_PATH)/include -I$(OPENVC_INSTALL_PATH)
+LDFLAGS= -L$(OPENVC_INSTALL_PATH) -lopencv_highgui -lopencv_core
+CUDAFLAGS= -arch sm_20
 
 #Uncomment the line below if you dont have CUDA enabled GPU
 #EMU=-deviceemu
@@ -15,7 +16,7 @@ LDFLAGS= -L$(CUDA_INSTALL_PATH)/lib -lcudart -L/usr/local/lib -lopencv_core -lcv
 all:
 	$(CXX) $(CFLAGS) -c main.cpp -o main.o -c  
 	$(CXX) $(CFLAGS) -c VideoOperations.cpp -o video.o
-	nvcc $(CUDAFLAGS) -c kernel_gpu.cu -o kernel_gpu.o
+	nvcc $(CFLAGS) $(CUDAFLAGS) -c kernel_gpu.cu -o kernel_gpu.o
 	$(CXX) $(LDFLAGS) main.o kernel_gpu.o video.o -o gauss_gpu 
 
 clean:
