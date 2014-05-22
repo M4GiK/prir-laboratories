@@ -21,7 +21,8 @@ VideoOperations::VideoOperations(std::string inputFile, std::string outputFile)
  */
 VideoOperations::~VideoOperations()
 {
-	// TODO Auto-generated destructor stub
+	VideoOperations::inputVideo.~VideoCapture();
+	VideoOperations::outputVideo.~VideoWriter();
 }
 
 /**
