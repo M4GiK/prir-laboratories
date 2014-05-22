@@ -86,24 +86,25 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
 	int inputBytes = input.rows * input.step;
 	int outputBytes = output.rows * output.step;
 
-	// Prepare grid for kernel
+	// Prepare grid for kernel.
 	dim3 dimBlock(threadsOnX, threadsOnY);
 	dim3 dimGrid(ceil((double) output.cols / dimBlock.x),
 			ceil((double) output.rows / dimBlock.y));
 
-	// Allocate memory for frame calculation
+	// Allocate memory for frame calculation.
 	cudaMalloc((void**) &inputPixel, inputBytes);
 	cudaMalloc((void**) &outputPixel, outputBytes);
 
-	// Reset output memory to 0
+	// Reset output memory to 0.
 	cudaMemset(outputPixel, 0, outputBytes);
 
-	// Copy input frame to GPU memory
+	// Copy input frame to GPU memory.
 	cudaMemcpy(inputPixel, input.ptr(), inputBytes, cudaMemcpyHostToDevice);
 	unsigned int hostCounter = 0;
 	cudaMemcpyToSymbol(blockCounter, &hostCounter, sizeof(unsigned int), 0,
 			cudaMemcpyHostToDevice);
 
+	// Prepare table to gauss conversion.
 	int *devKernel;
 	int hostKernel[5][5];
 	memcpy(hostKernel, GAUSS, sizeof(GAUSS));
@@ -113,18 +114,18 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
 	cudaMalloc((void**) &devKernel, memorySize);
 	cudaMemcpy(devKernel, hostKernel, memorySize, cudaMemcpyHostToDevice);
 
-	// Apply filter Gauss blur
+	// Apply filter Gauss blur.
 	cudaGauss(blocksPerKernel, dimBlock, inputPixel, outputPixel, input.cols,
 			input.rows, input.step, devKernel, 5, dimGrid.x,
 			dimGrid.x * dimGrid.y);
 
-	// Synchronize the device
+	// Synchronize the device.
 	cudaDeviceSynchronize();
 
-	// Copy result to host memory
+	// Copy result to host memory.
 	cudaMemcpy(output.ptr(), outputPixel, outputBytes, cudaMemcpyDeviceToHost);
 
-	// Free the memory
+	// Free the memory.
 	cudaFree(inputPixel);
 	cudaFree(outputPixel);
 }
@@ -136,25 +137,25 @@ void performKernelCalculation(cv::Mat& input, cv::Mat& output)
  * @param videoInput
  * @param videoOutput
  */
-void performGaussianBlur(unsigned int threadCount, std::string videoInput,
+void performGaussianBlur(std::string videoInput,
 		std::string videoOutput)
 {
-	VideoOperations videoOperations = new VideoOperations(videoInput,
+	VideoOperations *videoOperations = new VideoOperations(videoInput,
 			videoOutput);
 	cv::Mat input;
 
 	ftime(&startTime);
 
-	while (videoOperations.readFrames(input))
+	while (videoOperations->readFrames(input))
 	{
-		cv::Mat output(videoOperations.outHeight, videoOperations.outWidth,
+		cv::Mat output(videoOperations->outHeight, videoOperations->outWidth,
 				cv::CV_8UC3);
 		performKernelCalculation(input, output);
 	}
 
 	ftime(&stopTime);
 
-	videoOperations.release();
+	videoOperations->release();
 }
 
 /**
@@ -184,12 +185,12 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	unsigned int threadCount = argv[1];
+	unsigned int threadCount = atoi(argv[1]);
 	std::string videoInput = argv[2];
 	std::string videoOutput = argv[3];
 
 	prepareGrid(threadCount);
-	performGaussianBlur(threadCount, videoInput, videoOutput);
+	performGaussianBlur(videoInput, videoOutput);
 	cout << getTime() << endl;
 
 	return 0;
