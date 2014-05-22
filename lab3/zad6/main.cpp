@@ -159,6 +159,7 @@ void performGaussianBlur(unsigned int threadCount, std::string videoInput,
 
 	ftime(&stopTime);
 
+	videoOperations.release();
 }
 
 /**

@@ -26,6 +26,7 @@ public:
 	bool readFrames(cv::Mat input);
 	void saveFrames(cv::Mat output);
 	void assertFileExist(const std::string filePath);
+	void release();
 	void openVideo(std::string inputFile);
 	cv::VideoCapture openVideo(std::string inputFile);
 	cv::VideoWriter prepareOutputVideo(std::string outputFile);

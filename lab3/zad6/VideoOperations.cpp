@@ -25,6 +25,14 @@ VideoOperations::~VideoOperations()
 }
 
 /**
+ * This method closes video file or capturing device.
+ */
+void release()
+{
+	VideoOperations::inputVideo.release();
+}
+
+/**
  *  Opens video file.
  *
  * @param inputFile The path to file.
