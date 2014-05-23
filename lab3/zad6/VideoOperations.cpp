@@ -30,7 +30,7 @@ VideoOperations::~VideoOperations()
  *
  * @param filePath The file path to check.
  */
-void assertFileExist(const std::string filePath)
+void VideoOperations::assertFileExist(const std::string filePath)
 {
 	std::ifstream fileStream(filePath.c_str());
 	if (!fileStream.good())
@@ -47,7 +47,7 @@ void assertFileExist(const std::string filePath)
 /**
  * This method closes video file or capturing device.
  */
-void release()
+void VideoOperations::release()
 {
 	VideoOperations::inputVideo.release();
 }
@@ -57,7 +57,7 @@ void release()
  *
  * @param inputFile The path to file.
  */
-void openVideo(std::string inputFile)
+void VideoOperations::openVideo(std::string inputFile)
 {
 	assertFileExist(inputFile);
 
@@ -76,7 +76,7 @@ void openVideo(std::string inputFile)
  * @param inputFile The path to file.
  * @return The descriptor for video file capture.
  */
-cv::VideoCapture getOpenVideo(std::string inputFile)
+cv::VideoCapture VideoOperations::getOpenVideo(std::string inputFile)
 {
 	assertFileExist(inputFile);
 
@@ -99,7 +99,7 @@ cv::VideoCapture getOpenVideo(std::string inputFile)
  * @param outputFile The path for output file.
  * @return The descriptor for video writer.
  */
-cv::VideoWriter prepareOutputVideo(std::string outputFile)
+cv::VideoWriter VideoOperations::prepareOutputVideo(std::string outputFile)
 {
 	VideoOperations::outWidth = (int) (VideoOperations::inputVideo.get(
 			CV_CAP_PROP_FRAME_WIDTH));
@@ -127,7 +127,7 @@ cv::VideoWriter prepareOutputVideo(std::string outputFile)
  * @param input The matrix to read.
  * @return True if can read input stream, false if can't or end given input stream.
  */
-bool readFrames(cv::Mat input)
+bool VideoOperations::readFrames(cv::Mat input)
 {
 	return VideoOperations::inputVideo.read(input);
 }
@@ -137,7 +137,7 @@ bool readFrames(cv::Mat input)
  *
  * @param output The matrix with data.
  */
-void saveFrames(cv::Mat output)
+void VideoOperations::saveFrames(cv::Mat output)
 {
 	VideoOperations::outputVideo.write(output);
 }
