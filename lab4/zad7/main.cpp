@@ -22,26 +22,92 @@ typedef std::multimap<long, long> LongMultimap;
 
 int main(int argc, char * * argv);
 
+/**
+ * @brief Searches for primes located in inputPath file, performing
+ * Rabin-Miller tests repeatCount times on every number.
+ * @param inputPath Location of the file containg numbers.
+ * @param repeatCount Number of repeats to be performed in Rabin-Miller test.
+ */
 void searchForPrimes(const string &inputPath, const unsigned int repeatCount);
 
+/**
+ * @brief Reads numbers from a file located in inputPath.
+ * @param inputPath File location.
+ * @return Numbers read from the file.
+ */
 const LongVector *readNumbersFromFile(const string &inputPath);
 
+/**
+ * @brief Searches for primes in the collection given as a parameter.
+ * @param numbers Numbers to be checked.
+ * @param results Collection to save the results to.
+ * @param repeatCount Number of repeats to be performed in Rabin-Miller test.
+ */
 void searchForPrimesUsingMPI(const LongVector *numbers, LongMultimap &results, const unsigned int repeatCount);
 
+/**
+ * @brief Sends the number to computing node for a Rabin-Miller test.
+ * @param input Number to be sent.
+ * @param destRank Rank of the computing node.
+ * @param sendRequest Send request of the operation.
+ */
 void sendNumberToTest(long input, const int destRank, MPI_Request &sendRequest);
 
+/**
+ * @brief Performs Rabin-Miller test on the received number.
+ * @param input Received number.
+ * @param receiveRequest Receive request of the operation.
+ * @param repeatCount Number of repeats for Rabin-Miller test.
+ */
 void performTest(long input, MPI_Request &receiveRequest, const unsigned int repeatCount);
 
+/**
+ * @brief Saves responses from normal nodes to the leader node.
+ * @param results Results of the computation done so far.
+ * @param destRank Rank of the computing node.
+ * @param status Status of the operation.
+ */
 void saveResponses(LongMultimap &results, const int destRank, MPI_Status &status);
 
+/**
+ * @brief Prints results in a manner described
+ * in the assignment guidelines.
+ * @param results Results of the computation.
+ */
 void printResults(const LongMultimap &results);
 
+/**
+ * @brief Prints computation time in a manner described
+ * in the assignment guidelines.
+ * @param start Timestamp for start of computation.
+ * @param end Timestamp for end of computation.
+ */
 void printTime(double start, double end);
 
+/**
+ * @brief Performs a Rabin-Miller test
+ * to check whether value is a prime number.
+ * @param value Value to check.
+ * @param repeatCount Number of repeats.
+ * @return Whether the value given has passed
+ * repeatCount rounds of Rabin-Miller test or not.
+ */
 bool rabinMillerTest(long value, unsigned int repeatCount);
 
+/**
+ * @brief Performs a modular exponentiation: a^exponent mod m.
+ * @param a Base for modular exponentiation.
+ * @param exponent Exponent for modular exponentiation.
+ * @param m Modulus for modular exponentiation.
+ * @return  a^exponent mod m.
+ */
 long modPow(long a, long exponent, long m);
 
+/**
+ * @brief Returns 2^exponent.
+ * @param exponent Exponent for f(x) = 2^x.
+ * @return 2^exponent.
+ */
 long powerOfTwo(long exponent);
 
 int main(int argc, char * * argv)
