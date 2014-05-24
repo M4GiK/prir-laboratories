@@ -48,6 +48,23 @@ void prepareGrid(unsigned int threadCount);
 void prepareFilter();
 
 /**
+ * Starts event time calculation.
+ *
+ * @param start The cuda event time instance.
+ * @param stop The cuda event time instance.
+ */
+void cudaEventTimer_start(cudaEvent_t *start, cudaEvent_t *stop);
+
+/**
+ * Stops event time calculation.
+ *
+ * @param start The cuda event time instance.
+ * @param stop The cuda event time instance.
+ * @return The event elapsed time.
+ */
+float cudaEventTimer_stop(cudaEvent_t start, cudaEvent_t stop);
+
+/**
  * This method returns sum of given array.
  *
  * @param array The array with data to calculate the sum.

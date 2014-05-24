@@ -54,6 +54,37 @@ void prepareFilter()
 }
 
 /**
+ * Starts event time calculation.
+ *
+ * @param start The cuda event time instance.
+ * @param stop The cuda event time instance.
+ */
+void cudaEventTimer_start(cudaEvent_t *start, cudaEvent_t *stop)
+{
+	cudaEventCreate(start);
+	cudaEventCreate(stop);
+	cudaEventRecord(*start, 0);
+}
+
+/**
+ * Stops event time calculation.
+ *
+ * @param start The cuda event time instance.
+ * @param stop The cuda event time instance.
+ * @return The event elapsed time.
+ */
+float cudaEventTimer_stop(cudaEvent_t start, cudaEvent_t stop)
+{
+	float time;
+
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&time, start, stop);
+
+	return time;
+}
+
+/**
  * This method returns sum of given array.
  *
  * @param array 		The array with data to calculate the sum.
@@ -171,7 +202,6 @@ extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
 	cudaMemcpy(inputPixel, imageIn, size, cudaMemcpyDeviceToHost);
 	cudaFree(inputPixel);
 	cudaFree(outputPixel);
-
 }
 
 /**
