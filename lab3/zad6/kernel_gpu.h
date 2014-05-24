@@ -9,24 +9,20 @@
 /**
  * Header for the method of doing a gaussian blur.
  *
- * @param inputPixel
- * @param outputPixel
- * @param width
- * @param height
- * @param channels
- * @param blocksPerKernel
+ * @param inputPixel The pixel to perform.
+ * @param outputPixel The result of pixel conversion.
+ * @param width	The width of frame.
+ * @param height The height of frame.
+ * @param channels The channels color for pixel.
  */
 extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
-		int width, int height, int channels, int blocksPerKernel);
+		int width, int height, int channels);
 
 /** Grid variables **/
 static int threadsOnX = 1;
 
 /** Grid variables **/
 static int threadsOnY = 1;
-
-/** Blocks assigned per kernel **/
-static int blocksPerKernel = 1;
 
 /** Size for Gauss kernel **/
 const static int KERNEL_SIZE = 5;

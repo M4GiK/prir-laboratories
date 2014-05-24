@@ -87,7 +87,9 @@ int main(int argc, char* argv[])
 	prepareGrid(threadCount);
 	prepareFilter();
 	performGaussianBlur(videoInput, videoOutput);
-	cout << getTime() << endl;
+
+	cout << "Total time : " << getTime() << " sec" << endl;
+	cout << "Threads	: " << threadCount << endl;
 
 	return 0;
 }

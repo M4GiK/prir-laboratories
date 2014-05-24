@@ -9,6 +9,9 @@
 
 /**
  * The constructor for VideoOperations.
+ *
+ * @param inputFile The path to file with input video stream.
+ * @param outputFile The path to output result.
  */
 VideoOperations::VideoOperations(std::string inputFile, std::string outputFile)
 {
@@ -53,7 +56,7 @@ void VideoOperations::release()
 }
 
 /**
- *  Opens video file.
+ * Opens video file.
  *
  * @param inputFile The path to file.
  */

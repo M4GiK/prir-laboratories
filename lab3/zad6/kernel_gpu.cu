@@ -27,8 +27,6 @@ void prepareGrid(unsigned int threadCount)
 
 		if (blocks == (int) (blocks))
 		{
-			blocksPerKernel = int(blocks);
-
 			double divThreads = sqrt(i);
 			if (divThreads == int(divThreads))
 			{
@@ -58,8 +56,8 @@ void prepareFilter()
 /**
  * This method returns sum of given array.
  *
- * @param array The array with data to calculate the sum.
- * @return The sum of given array.
+ * @param array 		The array with data to calculate the sum.
+ * @return 				The sum of given array.
  */
 int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
 {
@@ -75,52 +73,49 @@ int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
 	return sum;
 }
 
-
 /**
+ * This method gets current thread id.
  *
- * @return
- */
-__device__ int getThreadId()
+ * @return The proper thread id.
+ */__device__ int getThreadId()
 {
 	int blockId = blockIdx.x + blockIdx.y * gridDim.x;
-	int threadId = blockId * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
+	int threadId = blockId * (blockDim.x * blockDim.y)
+			+ (threadIdx.y * blockDim.x) + threadIdx.x;
 
 	return threadId;
 }
 
 /**
  * CUDA implementation for Gaussian blur.
- * TODO add comments.
  *
- * @param input
- * @param output
- * @param width
- * @param height
- * @param inputWidthStep
- * @param kernel
- * @param kernelSize
- * @param gridWidth
- * @param numBlocks
- */
-__global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
-		int width, int height, int channels,
-		int **kernel, int kernelSize, int adjustedSize, int sum)
+ * @param imageIn 		The pixel to perform.
+ * @param imageOut 		The result of pixel conversion.
+ * @param width			The width of frame.
+ * @param height 		The height of frame.
+ * @param channels 		The channels color for pixel.
+ * @param kernel		The kernel for gaussian blur.
+ * @param kernelSize	The size of kernel.
+ * @param adjustedSize	The adjusted size of kernel (usually the half of kernel size rounded down).
+ * @param sum			The sum of all kernel values.
+ */__global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
+		int width, int height, int channels, int **kernel, int kernelSize,
+		int adjustedSize, int sum)
 {
 	const int index = getThreadId();
 
 	if (index < width * height)
 	{
-		if (index % width < adjustedSize
+		if (!(index % width < adjustedSize
 				|| index % width >= width - adjustedSize
 				|| index / width < adjustedSize
-				|| index / width >= height - adjustedSize)
-		{
-		}
-		else
+				|| index / width >= height - adjustedSize))
+
 		{
 			float x = 0.0f;
 			float y = 0.0f;
 			float z = 0.0f;
+
 			for (int j = 0; j < kernelSize; ++j)
 			{
 				for (int i = 0; i < kernelSize; ++i)
@@ -135,6 +130,7 @@ __global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 				}
 
 			}
+
 			// Apply to output image and save result.
 			imageOut[index * channels] = (unsigned char) (x / sum);
 			imageOut[index * channels + 1] = (unsigned char) (y / sum);
@@ -146,15 +142,14 @@ __global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 /**
  * This method invoke CUDA implementation from "C" code.
  *
- * @param inputPixel
- * @param outputPixel
- * @param width
- * @param height
- * @param channelscd
- * @param blocksPerKernel
+ * @param inputPixel 	The pixel to perform.
+ * @param outputPixel 	The result of pixel conversion.
+ * @param width			The width of frame.
+ * @param height 		The height of frame.
+ * @param channels 		The channels color for pixel.
  */
 extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
-		int width, int height, int channels, int blocksPerKernel)
+		int width, int height, int channels)
 {
 	unsigned char *imageIn, *imageOut;
 	int size = width * height * channels;
@@ -180,7 +175,7 @@ extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
 }
 
 /**
- *  Performs kernel operations.
+ * Performs kernel operations.
  *
  * @param input The matrix data to perform.
  * @return The performed frame.
@@ -196,8 +191,7 @@ cv::Mat performKernelCalculation(cv::Mat& input)
 	unsigned char *outputPixel = output.data;
 
 	// Apply filter Gauss blur.
-	cudaGauss(inputPixel, outputPixel, width, height, channels,
-			blocksPerKernel);
+	cudaGauss(inputPixel, outputPixel, width, height, channels);
 
 	return output;
 }
