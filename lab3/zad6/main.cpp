@@ -5,14 +5,9 @@
 #include "kernel_gpu.h"
 #include "VideoOperations.h"
 
-#include <iomanip>
-#include <iostream>
-#include <math.h>
 #include <iostream>
 #include <fstream>
-#include <stdexcept>
 #include <string>
-#include <vector>
 #include <sys/timeb.h>
 
 using std::cout;
@@ -25,11 +20,10 @@ typedef struct timeb TimePoint;
 TimePoint startTime, stopTime;
 
 /**
- * TODO add comments.
+ * Performs operation on video stream, apply blur option on frames.
  *
- * @param threadCount
- * @param videoInput
- * @param videoOutput
+ * @param videoInput The path to file with input video stream.
+ * @param videoOutput The path to output result.
  */
 void performGaussianBlur(std::string videoInput, std::string videoOutput)
 {
@@ -43,7 +37,7 @@ void performGaussianBlur(std::string videoInput, std::string videoOutput)
 	while (videoOperations->readFrames(input))
 	{
 		cv::Mat currentFrame, finalFrame;
-		videoOperations->inputVideo>>currentFrame;
+		videoOperations->inputVideo >> currentFrame;
 		finalFrame = performKernelCalculation(currentFrame);
 		videoOperations->saveFrames(finalFrame);
 	}
