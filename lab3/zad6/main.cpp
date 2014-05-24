@@ -65,11 +65,17 @@ double getTime()
 }
 
 /**
- * TODO add comments.
+ * The main method of application which converts given video to blurred video.
  *
- * @param argc
- * @param argv
- * @return
+ * @param argc	Number of arguments given to the program.
+ * 						This value should be equal to 3.
+ *
+ * @param argv			The first parameter:  <threadCount>
+ * 						The second parameter: <videoInput>
+ * 						The third parameter:  <videoOutput>
+ *
+ * @return C-standard return code: 0 if success,
+ * 						other value if errors occurred during the execution.
  */
 int main(int argc, char* argv[])
 {

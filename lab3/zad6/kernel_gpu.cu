@@ -4,6 +4,9 @@
 //============================================================================
 #include "kernel_gpu.h"
 
+/** Pointer to Gauss kernel **/
+int **devKernel;
+
 /**
  * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
  *
@@ -72,11 +75,12 @@ int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
 	return sum;
 }
 
-/** Global number of blocks **/
-__device__ unsigned int blockCounter;
 
-
-__device__ int getGlobalId()
+/**
+ *
+ * @return
+ */
+__device__ int getThreadId()
 {
 	int blockId = blockIdx.x + blockIdx.y * gridDim.x;
 	int threadId = blockId * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
@@ -100,9 +104,9 @@ __device__ int getGlobalId()
  */
 __global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 		int width, int height, int channels,
-		const int KERNEL[KERNEL_SIZE][KERNEL_SIZE], int kernelSize, int adjustedSize, int sum)
+		int **kernel, int kernelSize, int adjustedSize, int sum)
 {
-	const int index = getGlobalId();
+	const int index = getThreadId();
 
 	if (index < width * height)
 	{
@@ -125,9 +129,9 @@ __global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 					int shift = ((j + i) / kernelSize - adjustedSize) * width
 							+ (j + i) % kernelSize - adjustedSize;
 
-					x += imageIn[(index + shift) * channels] * KERNEL[j][i];
-					y += imageIn[(index + shift) * channels + 1] * KERNEL[j][i];
-					z += imageIn[(index + shift) * channels + 2] * KERNEL[j][i];
+					x += imageIn[(index + shift) * channels] * kernel[j][i];
+					y += imageIn[(index + shift) * channels + 1] * kernel[j][i];
+					z += imageIn[(index + shift) * channels + 2] * kernel[j][i];
 				}
 
 			}
@@ -137,108 +141,6 @@ __global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 			imageOut[index * channels + 2] = (unsigned char) (z / sum);
 		}
 	}
-//	__shared__ unsigned int index; // index for block calculation
-//	__shared__ unsigned int xBlock, yBlock; // x and y of block
-//
-//	// Neverending loop, for index calculation
-//	for (;;)
-//	{
-//		if ((threadIdx.x == 0) && (threadIdx.y == 0))
-//		{
-//			index = atomicAdd(&blockCounter, 1);
-//			xBlock = index % gridWidth;
-//			yBlock = index / gridWidth;
-//		}
-//
-//		// Synchronize the threads
-//		__syncthreads();
-//
-//		// Break the loop if we've exceeded the number of loops
-//		if (index >= numBlocks)
-//		{
-//			break;
-//		}
-//		// Calculate rows and columns of output part of frame
-//		int row = yBlock * blockDim.y + threadIdx.y;
-//		int col = xBlock * blockDim.x + threadIdx.x;
-//
-//		// Make sure we don't go out of range
-//		if ((row >= height) || (col >= width))
-//		{
-//			continue;
-//		}
-//
-//		// Get middle coords of kernel
-//		int xKernel = kernelSize / 2;
-//		int yKernel = kernelSize / 2;
-//
-//		// Prepare pixel value variables
-//		double pixelVal = 0;
-//		double b = 0, g = 0, r = 0;
-//		int pixelIndex = row * inputWidthStep + 3 * col;
-//
-//		// Calculate new values for pixels
-//		for (int i = 0; i < kernelSize; ++i)
-//		{
-//			int iRow = kernelSize - 1 - i;
-//
-//			for (int j = 0; j < kernelSize; ++j)
-//			{
-//				int iCol = kernelSize - 1 - j;
-//				int jRow = row + (i - yKernel);
-//				int jCol = col + (j - xKernel);
-//
-//				if ((jRow >= 0) && (jRow < height) && (jCol >= 0)
-//						&& (jCol < width))
-//				{
-//					double iPixelVal = kernel[iRow * kernelSize + iCol];
-//					int kernelIndex = jRow * inputWidthStep + (3 * jCol);
-//
-//					b += input[kernelIndex] * iPixelVal;
-//					g += input[kernelIndex + 1] * iPixelVal;
-//					r += input[kernelIndex + 2] * iPixelVal;
-//
-//					pixelVal += iPixelVal;
-//				}
-//			}
-//		}
-//
-//		// First check if the values fit in pixel range...
-//		double bPixelVal = b / pixelVal;
-//		if (bPixelVal < 0)
-//		{
-//			bPixelVal = 0;
-//		}
-//		else if (bPixelVal > 255)
-//		{
-//			bPixelVal = 255;
-//		}
-//
-//		double gPixelVal = g / pixelVal;
-//		if (gPixelVal < 0)
-//		{
-//			gPixelVal = 0;
-//		}
-//		else if (gPixelVal > 255)
-//		{
-//			gPixelVal = 255;
-//		}
-//
-//		double rPixelVal = r / pixelVal;
-//		if (rPixelVal < 0)
-//		{
-//			rPixelVal = 0;
-//		}
-//		else if (rPixelVal > 255)
-//		{
-//			rPixelVal = 255;
-//		}
-//
-//		// ... then write the output
-//		output[pixelIndex] = (unsigned char) (bPixelVal);
-//		output[pixelIndex + 1] = (unsigned char) (gPixelVal);
-//		output[pixelIndex + 2] = (unsigned char) (rPixelVal);
-//	}
 }
 
 /**
@@ -269,7 +171,7 @@ extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
 	dim3 dimGrid((width + dimBlock.x - 1) / dimBlock.x,
 			(height + dimBlock.y - 1) / dimBlock.y);
 
-	gaussBlur<<< dimGrid, dimBlock >>> (imageIn, imageOut, width , height, channels, KERNEL, KERNEL_SIZE, std::floor(KERNEL_SIZE / 2), sumArray(KERNEL));
+	gaussBlur<<< dimGrid, dimBlock >>> (imageIn, imageOut, width , height, channels, devKernel, KERNEL_SIZE, std::floor(KERNEL_SIZE / 2), sumArray(KERNEL));
 
 	cudaMemcpy(inputPixel, imageIn, size, cudaMemcpyDeviceToHost);
 	cudaFree(inputPixel);
@@ -278,9 +180,10 @@ extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
 }
 
 /**
- * Performs kernel operations.
+ *  Performs kernel operations.
  *
  * @param input The matrix data to perform.
+ * @return The performed frame.
  */
 cv::Mat performKernelCalculation(cv::Mat& input)
 {

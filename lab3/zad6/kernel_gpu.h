@@ -39,9 +39,6 @@ const static int KERNEL[KERNEL_SIZE][KERNEL_SIZE] = {
 		{ 1, 4, 8, 4, 1 },
 		{ 0, 1, 2, 1, 0 } };
 
-/** Pointer to kernel **/
-int *devKernel;
-
 /**
  * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
  *
