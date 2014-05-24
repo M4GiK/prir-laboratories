@@ -5,7 +5,8 @@
  *      Author: Michał Szczygieł <michal.szczygiel@wp.pl>
  */
 
-#include <opencv2/core/core.hpp>		// Basic OpenCV structures (cv::Mat)
+// Basic OpenCV structures (cv::Mat)
+#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <cerrno>
 #include <sstream>
@@ -18,10 +19,10 @@
 class VideoOperations
 {
 public:
-	static int outWidth;
-	static int outHeight;
-	static cv::VideoCapture inputVideo;
-	static cv::VideoWriter outputVideo;
+	int outWidth;
+	int outHeight;
+	cv::VideoCapture inputVideo;
+	cv::VideoWriter outputVideo;
 
 	VideoOperations(std::string inputFile, std::string outputFile);
 	virtual ~VideoOperations();
