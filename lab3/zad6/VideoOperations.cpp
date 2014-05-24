@@ -13,7 +13,7 @@
 VideoOperations::VideoOperations(std::string inputFile, std::string outputFile)
 {
 	VideoOperations::openVideo(inputFile);
-	VideoOperations::prepareOutputVideo(outputFile);
+	VideoOperations::outputVideo = VideoOperations::prepareOutputVideo(outputFile);
 }
 
 /**

@@ -21,12 +21,8 @@ using std::endl;
 
 typedef struct timeb TimePoint;
 
-
 /** Time stamp for time calculation **/
 TimePoint startTime, stopTime;
-
-
-
 
 /**
  * TODO add comments.
@@ -42,12 +38,14 @@ void performGaussianBlur(std::string videoInput, std::string videoOutput)
 	cv::Mat input;
 
 	ftime(&startTime);
+	cudaEvent_t start, stop;
 
 	while (videoOperations->readFrames(input))
 	{
-		cv::Mat output(videoOperations->outHeight, videoOperations->outWidth,
-				CV_8UC3);
-		performKernelCalculation(input, output);
+		cv::Mat currentFrame, finalFrame;
+		videoOperations->inputVideo>>currentFrame;
+		finalFrame = performKernelCalculation(currentFrame);
+		videoOperations->saveFrames(finalFrame);
 	}
 
 	ftime(&stopTime);
@@ -87,6 +85,7 @@ int main(int argc, char* argv[])
 	std::string videoOutput = argv[3];
 
 	prepareGrid(threadCount);
+	prepareFilter();
 	performGaussianBlur(videoInput, videoOutput);
 	cout << getTime() << endl;
 

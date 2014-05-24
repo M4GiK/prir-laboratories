@@ -9,29 +9,60 @@
 /**
  * Header for the method of doing a gaussian blur.
  *
- * @param blocks
- * @param block_size
- * @param input
- * @param output
+ * @param inputPixel
+ * @param outputPixel
  * @param width
  * @param height
- * @param inputWidthStep
- * @param kernel
- * @param kernelSize
- * @param gridWidth
- * @param numBlocks
+ * @param channels
+ * @param blocksPerKernel
  */
-extern "C" void cudaGauss(dim3 blocks, dim3 block_size, unsigned char* input,
-		unsigned char* output, int width, int height, int inputWidthStep,
-		int *kernel, int kernelSize, int gridWidth, int numBlocks);
+extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
+		int width, int height, int channels, int blocksPerKernel);
 
-/**  Filter table for Gauss blur **/
-static int GAUSS[5][5] = 	{
+/** Grid variables **/
+static int threadsOnX = 1;
+
+/** Grid variables **/
+static int threadsOnY = 1;
+
+/** Blocks assigned per kernel **/
+static int blocksPerKernel = 1;
+
+/** Size for Gauss kernel **/
+const static int KERNEL_SIZE = 5;
+
+/** Kernel for Gauss blur, if the gausse is more then picture is more blurred **/
+const static int KERNEL[KERNEL_SIZE][KERNEL_SIZE] = {
 		{ 0, 1, 2, 1, 0 },
 		{ 1, 4, 8, 4, 1 },
 		{ 2, 8, 16, 8, 2 },
 		{ 1, 4, 8, 4, 1 },
 		{ 0, 1, 2, 1, 0 } };
 
+/** Pointer to kernel **/
+int *devKernel;
+
+/**
+ * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
+ *
+ * @param threadCount The amount of threads
+ */
 void prepareGrid(unsigned int threadCount);
-void performKernelCalculation(cv::Mat& input, cv::Mat& output);
+
+/**
+ * Prepares table to gauss conversion.
+ */
+void prepareFilter();
+
+/**
+ * This method returns sum of given array.
+ *
+ * @param array The array with data to calculate the sum.
+ * @return The sum of given array.
+ */
+int sumArray(int array[KERNEL_SIZE][KERNEL_SIZE]);
+
+/**
+ * Performs kernel operations.
+ */
+cv::Mat performKernelCalculation(cv::Mat& input);
