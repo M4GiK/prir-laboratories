@@ -19,19 +19,6 @@ typedef struct timeb TimePoint;
 /** Time stamp for time calculation **/
 TimePoint startTime, stopTime;
 
-/** Time for CUDA kernel operations. **/
-float gpuTime = 0.0f;
-
-/**
- * Gets time in seconds for CUDA kernel operations.
- *
- * @return Time in seconds for CUDA operations.
- */
-float getGPUTime()
-{
-	return gpuTime / 1000;
-}
-
 /**
  * Performs operation on video stream, apply blur option on frames.
  *
@@ -45,15 +32,12 @@ void performGaussianBlur(std::string videoInput, std::string videoOutput)
 	cv::Mat input;
 
 	ftime(&startTime);
-	cudaEvent_t start, stop;
 
 	while (videoOperations->readFrames(input))
 	{
 		cv::Mat currentFrame, finalFrame;
 		videoOperations->inputVideo >> currentFrame;
-		cudaEventTimer_start(&start, &stop);
 		finalFrame = performKernelCalculation(currentFrame);
-		gpuTime += cudaEventTimer_stop(start, stop);
 		videoOperations->saveFrames(finalFrame);
 	}
 

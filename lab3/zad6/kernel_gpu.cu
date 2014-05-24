@@ -5,7 +5,20 @@
 #include "kernel_gpu.h"
 
 /** Pointer to Gauss kernel **/
-int **devKernel;
+float *devKernel;
+
+/** Time for CUDA kernel operations. **/
+float gpuTime = 0.0f;
+
+/**
+ * Gets time in seconds for CUDA kernel operations.
+ *
+ * @return Time in seconds for CUDA operations.
+ */
+float getGPUTime()
+{
+	return gpuTime / 1000;
+}
 
 /**
  * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
@@ -20,6 +33,8 @@ void prepareGrid(unsigned int threadCount)
 		++threadCount;
 	}
 
+//	threadsOnX = threadCount > 256 ? 256 : threadCount;
+//	threadsOnY = threadCount > 256 ? threadCount / 256 : 1;
 	// Divide into blocks
 	for (int i = 512; i > 0; i--)
 	{
@@ -80,6 +95,8 @@ float cudaEventTimer_stop(cudaEvent_t start, cudaEvent_t stop)
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&time, start, stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
 
 	return time;
 }
@@ -90,15 +107,12 @@ float cudaEventTimer_stop(cudaEvent_t start, cudaEvent_t stop)
  * @param array 		The array with data to calculate the sum.
  * @return 				The sum of given array.
  */
-int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
+int sumArray(const float array[KERNEL_SIZE * KERNEL_SIZE])
 {
 	int sum = 0;
-	for (int i = 0; i < KERNEL_SIZE; i++)
+	for (int i = 0; i < KERNEL_SIZE * KERNEL_SIZE; i++)
 	{
-		for (int j = 0; j < KERNEL_SIZE; j++)
-		{
-			sum += array[i][j];
-		}
+		sum += array[i];
 	}
 
 	return sum;
@@ -130,7 +144,7 @@ int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
  * @param adjustedSize	The adjusted size of kernel (usually the half of kernel size rounded down).
  * @param sum			The sum of all kernel values.
  */__global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
-		int width, int height, int channels, int **kernel, int kernelSize,
+		int width, int height, int channels, float *kernel, int kernelSize,
 		int adjustedSize, int sum)
 {
 	const int index = getThreadId();
@@ -147,19 +161,15 @@ int sumArray(const int array[KERNEL_SIZE][KERNEL_SIZE])
 			float y = 0.0f;
 			float z = 0.0f;
 
-			for (int j = 0; j < kernelSize; ++j)
+			for (int j = 0; j < kernelSize * kernelSize; ++j)
 			{
-				for (int i = 0; i < kernelSize; ++i)
-				{
-					// Compute index shift to neighboring cords.
-					int shift = ((j + i) / kernelSize - adjustedSize) * width
-							+ (j + i) % kernelSize - adjustedSize;
+				// Compute index shift to neighboring cords.
+				int shift = (j / kernelSize - adjustedSize) * width
+						+ j % kernelSize - adjustedSize;
 
-					x += imageIn[(index + shift) * channels] * kernel[j][i];
-					y += imageIn[(index + shift) * channels + 1] * kernel[j][i];
-					z += imageIn[(index + shift) * channels + 2] * kernel[j][i];
-				}
-
+				x += imageIn[(index + shift) * channels] * kernel[j];
+				y += imageIn[(index + shift) * channels + 1] * kernel[j];
+				z += imageIn[(index + shift) * channels + 2] * kernel[j];
 			}
 
 			// Apply to output image and save result.
@@ -196,12 +206,14 @@ extern "C" void cudaGauss(unsigned char* inputPixel, unsigned char* outputPixel,
 	dim3 dimBlock(threadsOnX, threadsOnY);
 	dim3 dimGrid((width + dimBlock.x - 1) / dimBlock.x,
 			(height + dimBlock.y - 1) / dimBlock.y);
-
+	cudaEvent_t start, stop;
+	cudaEventTimer_start(&start, &stop);
 	gaussBlur<<< dimGrid, dimBlock >>> (imageIn, imageOut, width , height, channels, devKernel, KERNEL_SIZE, std::floor(KERNEL_SIZE / 2), sumArray(KERNEL));
+	gpuTime += cudaEventTimer_stop(start, stop);
 
-	cudaMemcpy(inputPixel, imageIn, size, cudaMemcpyDeviceToHost);
-	cudaFree(inputPixel);
-	cudaFree(outputPixel);
+	cudaMemcpy(outputPixel, imageOut, size, cudaMemcpyDeviceToHost);
+	cudaFree(imageIn);
+	cudaFree(imageOut);
 }
 
 /**

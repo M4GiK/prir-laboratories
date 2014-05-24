@@ -25,15 +25,17 @@ static int threadsOnX = 1;
 static int threadsOnY = 1;
 
 /** Size for Gauss kernel **/
-const static int KERNEL_SIZE = 5;
+const static int KERNEL_SIZE = 3;
 
 /** Kernel for Gauss blur, if the gausse is more then picture is more blurred **/
-const static int KERNEL[KERNEL_SIZE][KERNEL_SIZE] = {
-		{ 0, 1, 2, 1, 0 },
-		{ 1, 4, 8, 4, 1 },
-		{ 2, 8, 16, 8, 2 },
-		{ 1, 4, 8, 4, 1 },
-		{ 0, 1, 2, 1, 0 } };
+const static float KERNEL[9] = {1.0f, 2.0f, 1.0f, 2.0f, 4.0f, 2.0f, 1.0f, 2.0f, 1.0f};
+
+/**
+ * Gets time in seconds for CUDA kernel operations.
+ *
+ * @return Time in seconds for CUDA operations.
+ */
+float getGPUTime();
 
 /**
  * This method based on run parameters. Calculates the amount of threads/blocks for the application use.
@@ -70,7 +72,7 @@ float cudaEventTimer_stop(cudaEvent_t start, cudaEvent_t stop);
  * @param array The array with data to calculate the sum.
  * @return The sum of given array.
  */
-int sumArray(int array[KERNEL_SIZE][KERNEL_SIZE]);
+int sumArray(const float array[KERNEL_SIZE*KERNEL_SIZE]);
 
 /**
  * Performs kernel operations.
