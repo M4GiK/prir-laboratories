@@ -33,8 +33,6 @@ void prepareGrid(unsigned int threadCount)
 		++threadCount;
 	}
 
-//	threadsOnX = threadCount > 256 ? 256 : threadCount;
-//	threadsOnY = threadCount > 256 ? threadCount / 256 : 1;
 	// Divide into blocks
 	for (int i = 512; i > 0; i--)
 	{
@@ -122,7 +120,8 @@ int sumArray(const float array[KERNEL_SIZE * KERNEL_SIZE])
  * This method gets current thread id.
  *
  * @return The proper thread id.
- */__device__ int getThreadId()
+ */
+__device__ int getThreadId()
 {
 	int blockId = blockIdx.x + blockIdx.y * gridDim.x;
 	int threadId = blockId * (blockDim.x * blockDim.y)
@@ -143,7 +142,8 @@ int sumArray(const float array[KERNEL_SIZE * KERNEL_SIZE])
  * @param kernelSize	The size of kernel.
  * @param adjustedSize	The adjusted size of kernel (usually the half of kernel size rounded down).
  * @param sum			The sum of all kernel values.
- */__global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
+ */
+__global__ void gaussBlur(unsigned char *imageIn, unsigned char *imageOut,
 		int width, int height, int channels, float *kernel, int kernelSize,
 		int adjustedSize, int sum)
 {
