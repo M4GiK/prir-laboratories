@@ -100,7 +100,7 @@ function performMatrixOperation(...)
 	C = matrixOperation(A, B, threadCount);
 	TimePoint end = std::chrono::system_clock::now();
 
-	cout << ((Duration) (end - start)).count();
+	cout << ((Duration) (end - start) * 1000.0).count();
 }
 [...]
 function sumMatrices(...)
@@ -132,6 +132,8 @@ int main(int argc, char* argv[])
 	...
 }
 \end{lstlisting}
+Dodatkowa iteracja ze zmienną k ma na celu zwiększanie czasu wykonania programu, aby móc osiągnąć czas niekrótszy niż 3 sekundy.
+\\
 
 Poniżej wykresy przedstawiający rezultat przeprowadzonych operacji na wątkach.
 \\
