@@ -18,6 +18,7 @@
 \usepackage{epstopdf}
 \usepackage{hyperref}
 
+
 \renewcommand{\onehalfspacing}{\setstretch{1.6}}
 
 \geometry{tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
@@ -91,48 +92,46 @@ Pierwsza postać dyrektywy określa wszystkie zmienne obszaru równoległego jak
 Druga postać dyrektywy określa zmienne A, B i C jako współdzielone, zmienną rozmiar jako prywatną o wartości wprowadzanej do obszaru równoległego i zmienne i, j jako zmienne prywatne bez wartości początkowej, a każde inne w obszarze równoległym wykorzystywane spowodują błędy kompilacji.
 \\
 
-Poniżej został umieszczony wycinek kodu odpowiedzialny za mnożenie macierzy.
-
+Operacje na macierzach zapisane w pseudokodzie:
 \begin{lstlisting}
-const DoubleMatrix *multiplyMatrices(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
+function performMatrixOperation(...)
 {
-    assertSizeEqual(A, B);
+	TimePoint start = std::chrono::system_clock::now();
+	C = matrixOperation(A, B, threadCount);
+	TimePoint end = std::chrono::system_clock::now();
 
-    DoubleMatrix *C = new DoubleMatrix();
-    fillMatrixWithZeros(*C, A.size());
-    unsigned int rowSize = sqrt(A.size());
-
-    #pragma omp parallel for default(none) shared(A, B, C) firstprivate(rowSize) num_threads(threadCount)
-    for (unsigned int i = 0; i < rowSize; ++i)
-    {
-        //double local = 0.0;
-        for (unsigned int j = 0 ; j < rowSize; ++j)
-        {
-            C->at(i * rowSize + j) = A.at(i * rowSize + j) * B.at(i + j * rowSize);
-            //local += A.at(i * rowSize + j) * B.at(i + j * rowSize);
-        }
-    }
-
-    return C;
+	cout << ((Duration) (end - start)).count();
 }
-\end{lstlisting}
-
-Poniżej został umieszczony wycinek kodu odpowiedzialny za sumowania macierzy.
-\begin{lstlisting}
-const DoubleMatrix *sumMatrices(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
+[...]
+function sumMatrices(...)
 {
-    assertSizeEqual(A, B);
+	fillMatrixWithZeros(*C, A.size());
 
-    DoubleMatrix *C = new DoubleMatrix();
-    fillMatrixWithZeros(*C, A.size());
+	#pragma omp parallel for default(none) shared(A, B, C) num_threads(threadCount)
+	for (unsigned int k = 0; k < 10000; ++k)
+		for (unsigned int i = 0; i < A.size(); i++)
+			C->at(i) = A.at(i) + B.at(i);
+	return C;
+}
 
-    #pragma omp parallel for default(none) shared(A, B, C) num_threads(threadCount)
-    for (unsigned int i = 0; i < A.size(); i++)
-    {
-        C->at(i) = A.at(i) + B.at(i);
-    }
+function multiplyMatrices(...)
+{
+	#pragma omp parallel for default(none) shared(A, B, C) firstprivate(rowSize) num_threads(threadCount)
+	for (unsigned int k = 0; k < 10000; ++k)
+		for (unsigned int i = 0; i < rowSize; ++i)
+			for (unsigned int j = 0; j < rowSize; ++j)
+				C->at(i * rowSize + j) = A.at(i * rowSize + j)
+						* B.at(i + j * rowSize);
+	return C;
+}
 
-    return C;
+[...]
+int main(int argc, char* argv[])
+{
+	...
+	performMatrixOperation(A, B, threadCount, sumMatrices);
+	performMatrixOperation(A, B, threadCount, multiplyMatrices);
+	...
 }
 \end{lstlisting}
 
@@ -150,5 +149,7 @@ Poniżej wykresy przedstawiający rezultat przeprowadzonych operacji na wątkach
 Przy użyciu OpenMP możemy zrównoleglić każdy powtarzalny fragment kodu uzyskując przy tym wysoką wydajność na maszynach wielordzeniowych. 
 Wraz ze wzrostem liczby wątków obserwujemy spadek czasu potrzebnego na wykonanie programu. Ten wzrost nie jest jednak liniowy - dla pewnej liczby wątków funkcja przyspieszenia stabilizuje się. Jest to związane z osiągnięciem stanu, w którym tworzenie kolejnych wątków, ich synchronizacja i zarządzanie są operacjami o kosztach przewyższających zyski ze zrównoleglania wykonywanych obliczeń.
 Innym wytłumaczeniem - być może kolejnym - jest nieregularne obciążenie serwera, na którym pomiary były wykonywane
+\\
+We wcześniejszej implementacji kodu dodatkowe pętle wydłużające czas działania znajdowały się ponad sekcją równoległą. Negatywnie odbijało się to na wydajności programu - nie można było zaobserwować przyrostu wydajności wraz z rosnącą liczbą rdzeni na spodziewanym poziomie.
 
 \end{document}
