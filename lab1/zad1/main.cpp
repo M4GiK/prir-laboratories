@@ -27,7 +27,7 @@ typedef std::vector<double> DoubleMatrix;
  */
 void initializeRandomValue()
 {
-    srand(time(NULL));
+	srand(time(NULL));
 }
 
 /*!
@@ -37,7 +37,7 @@ void initializeRandomValue()
  */
 double getRandomValue()
 {
-    return ((double)rand()) / RAND_MAX;
+	return ((double) rand()) / RAND_MAX;
 }
 
 /*!
@@ -49,10 +49,10 @@ double getRandomValue()
  */
 void fillMatrixWithRandomValues(DoubleMatrix &matrix, unsigned int size)
 {
-    for (unsigned int i = 0; i < size; ++i)
-    {
-        matrix.push_back(getRandomValue());
-    }
+	for (unsigned int i = 0; i < size; ++i)
+	{
+		matrix.push_back(getRandomValue());
+	}
 }
 
 /*!
@@ -64,10 +64,10 @@ void fillMatrixWithRandomValues(DoubleMatrix &matrix, unsigned int size)
  */
 void fillMatrixWithZeros(DoubleMatrix &matrix, unsigned int size)
 {
-    for (unsigned int i = 0; i < size; ++i)
-    {
-        matrix.push_back(0.0);
-    }
+	for (unsigned int i = 0; i < size; ++i)
+	{
+		matrix.push_back(0.0);
+	}
 }
 
 /*!
@@ -79,9 +79,9 @@ void fillMatrixWithZeros(DoubleMatrix &matrix, unsigned int size)
  */
 void initializeMatrices(DoubleMatrix &A, DoubleMatrix &B, unsigned int size)
 {
-    initializeRandomValue();
-    fillMatrixWithRandomValues(A, size);
-    fillMatrixWithRandomValues(B, size);
+	initializeRandomValue();
+	fillMatrixWithRandomValues(A, size);
+	fillMatrixWithRandomValues(B, size);
 }
 
 /*!
@@ -93,10 +93,31 @@ void initializeMatrices(DoubleMatrix &A, DoubleMatrix &B, unsigned int size)
  */
 void assertSizeEqual(const DoubleMatrix &A, const DoubleMatrix &B)
 {
-    if(A.size() != B.size())
-    {
-        throw std::invalid_argument("Matrices are not of equal size!");
-    }
+	if (A.size() != B.size())
+	{
+		throw std::invalid_argument("Matrices are not of equal size!");
+	}
+}
+
+/*!
+ * \brief performMatrixOperation Performs matrix multiplication or addition of A and B matrices 10000 times.
+ * Spawns threadCount threads for these operations.
+ * \param A First matrix - a vector of double precision floating-point values.
+ * \param B Second matrix.
+ * \param threadCount Number of threads to spawn in the parallel OpenMP block.
+ */
+void performMatrixOperation(const DoubleMatrix &A, const DoubleMatrix &B,
+		unsigned int threadCount,
+		const DoubleMatrix *(*matrixOperation)(const DoubleMatrix &,
+				const DoubleMatrix &, unsigned int))
+{
+	const DoubleMatrix *C;
+	TimePoint start = std::chrono::system_clock::now();
+	C = matrixOperation(A, B, threadCount);
+	delete (C);
+	TimePoint end = std::chrono::system_clock::now();
+
+	cout << ((Duration) (end - start)).count();
 }
 
 /*!
@@ -107,41 +128,25 @@ void assertSizeEqual(const DoubleMatrix &A, const DoubleMatrix &B)
  * \param threadCount Number of threads to spawn in the parallel OpenMP block.
  * \return Third matrix - the result of addition of A and B matrices.
  */
-const DoubleMatrix *sumMatrices(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
+const DoubleMatrix *sumMatrices(const DoubleMatrix &A, const DoubleMatrix &B,
+		unsigned int threadCount)
 {
-    assertSizeEqual(A, B);
+	assertSizeEqual(A, B);
 
-    DoubleMatrix *C = new DoubleMatrix();
-    fillMatrixWithZeros(*C, A.size());
+	DoubleMatrix *C = new DoubleMatrix();
+	fillMatrixWithZeros(*C, A.size());
 
-    #pragma omp parallel for default(none) shared(A, B, C) num_threads(threadCount)
-    for (unsigned int i = 0; i < A.size(); i++)
-    {
-        C->at(i) = A.at(i) + B.at(i);
-    }
+	#pragma omp parallel for default(none) shared(A, B, C) num_threads(threadCount)
+	for (unsigned int k = 0; k < 10000; ++k)
+	{
+		for (unsigned int i = 0; i < A.size(); i++)
+		{
 
-    return C;
-}
+			C->at(i) = A.at(i) + B.at(i);
 
-/*!
- * \brief performSumOperations Performs matrix addition of A and B matrices 10000 times.
- * Spawns threadCount threads for these operations.
- * \param A First matrix - a vector of double precision floating-point values.
- * \param B Second matrix.
- * \param threadCount Number of threads to spawn in the parallel OpenMP block.
- */
-void performSumOperations(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
-{
-    const DoubleMatrix *C;
-    TimePoint start = std::chrono::system_clock::now();
-    for (unsigned int i = 0; i < 10000; ++i)
-    {
-        C = sumMatrices(A, B, threadCount);
-        delete(C);
-    }
-    TimePoint end = std::chrono::system_clock::now();
-
-    cout << ((Duration)(end - start)).count();
+		}
+	}
+	return C;
 }
 
 /*!
@@ -152,47 +157,29 @@ void performSumOperations(const DoubleMatrix &A, const DoubleMatrix &B, unsigned
  * \param threadCount Number of threads to spawn in the parallel OpenMP block.
  * \return Third matrix - the result of multiplication of A and B matrices.
  */
-const DoubleMatrix *multiplyMatrices(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
+const DoubleMatrix *multiplyMatrices(const DoubleMatrix &A,
+		const DoubleMatrix &B, unsigned int threadCount)
 {
-    assertSizeEqual(A, B);
+	assertSizeEqual(A, B);
 
-    DoubleMatrix *C = new DoubleMatrix();
-    fillMatrixWithZeros(*C, A.size());
-    unsigned int rowSize = sqrt(A.size());
+	DoubleMatrix *C = new DoubleMatrix();
+	fillMatrixWithZeros(*C, A.size());
+	unsigned int rowSize = sqrt(A.size());
 
-    #pragma omp parallel for default(none) shared(A, B, C) firstprivate(rowSize) num_threads(threadCount)
-    for (unsigned int i = 0; i < rowSize; ++i)
-    {
-        //double local = 0.0;
-        for (unsigned int j = 0 ; j < rowSize; ++j)
-        {
-            C->at(i * rowSize + j) = A.at(i * rowSize + j) * B.at(i + j * rowSize);
-            //local += A.at(i * rowSize + j) * B.at(i + j * rowSize);
-        }
-    }
+	#pragma omp parallel for default(none) shared(A, B, C) firstprivate(rowSize) num_threads(threadCount)
+	for (unsigned int k = 0; k < 10000; ++k)
+	{
+		for (unsigned int i = 0; i < rowSize; ++i)
+		{
+			for (unsigned int j = 0; j < rowSize; ++j)
+			{
+				C->at(i * rowSize + j) = A.at(i * rowSize + j)
+						* B.at(i + j * rowSize);
+			}
+		}
+	}
 
-    return C;
-}
-
-/*!
- * \brief performMultiplyOperations Performs matrix multiplication of A and B matrices 10000 times.
- * Spawns threadCount threads for these operations.
- * \param A First matrix - a vector of double precision floating-point values.
- * \param B Second matrix.
- * \param threadCount Number of threads to spawn in the parallel OpenMP block.
- */
-void performMultiplyOperations(const DoubleMatrix &A, const DoubleMatrix &B, unsigned int threadCount)
-{
-    const DoubleMatrix *C;
-    TimePoint start = std::chrono::system_clock::now();
-    for (unsigned int i = 0; i < 10000; ++i)
-    {
-        C = multiplyMatrices(A, B, threadCount);
-        delete(C);
-    }
-    TimePoint end = std::chrono::system_clock::now();
-
-    cout << ((Duration)(end - start)).count();
+	return C;
 }
 
 /*!
@@ -205,21 +192,21 @@ void performMultiplyOperations(const DoubleMatrix &A, const DoubleMatrix &B, uns
  */
 int main(int argc, char* argv[])
 {
-    if (argc != 3)
-    {
-        cout << "Usage: ./macierz_omp <threadCount> <matrixSize>" << endl;
-        return -1;
-    }
+	if (argc != 3)
+	{
+		cout << "Usage: ./macierz_omp <threadCount> <matrixSize>" << endl;
+		return -1;
+	}
 
-    unsigned int threadCount = std::stoi(argv[1]);
-    unsigned int matrixSize = std::stoi(argv[2]);
+	unsigned int threadCount = std::stoi(argv[1]);
+	unsigned int matrixSize = std::stoi(argv[2]);
 
-    DoubleMatrix A, B;
-    initializeMatrices(A, B, matrixSize);
+	DoubleMatrix A, B;
+	initializeMatrices(A, B, matrixSize);
 
-    performSumOperations(A, B, threadCount);
-    cout << "\t";
-    performMultiplyOperations(A, B, threadCount);
+	performMatrixOperation(A, B, threadCount, sumMatrices);
+	cout << "\t";
+	performMatrixOperation(A, B, threadCount, multiplyMatrices);
 
-    return 0;
+	return 0;
 }
