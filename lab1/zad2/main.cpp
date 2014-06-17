@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	approximatePiMonteCarlo(threadCount, pointCount);
 	TimePoint end = std::chrono::system_clock::now();
 
-	Duration elapsedMillis = end - start;
+	Duration elapsedMillis = (end - start) * 1000;
 	cout << elapsedMillis.count() << endl;
 
 	return 0;

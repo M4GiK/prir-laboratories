@@ -117,7 +117,7 @@ void performMatrixOperation(const DoubleMatrix &A, const DoubleMatrix &B,
 	delete (C);
 	TimePoint end = std::chrono::system_clock::now();
 
-	cout << ((Duration) (end - start)).count();
+	cout << ((Duration) (end - start) * 1000.0).count();
 }
 
 /*!
