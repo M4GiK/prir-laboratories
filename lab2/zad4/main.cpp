@@ -273,7 +273,7 @@ void analyzeDocument(unsigned int threadCount, string contents)
 	}
 	TimePoint end = std::chrono::system_clock::now();
 
-	Duration elapsedMillis = end - start;
+	Duration elapsedMillis = (end - start) * 1000.0;
 
 	printInformations(elapsedMillis, result);
 }

@@ -99,6 +99,8 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
     Histogram trigramDistribution;
 
     unsigned int chunkSize = calculateChunkSize(contents, threadCount);
+    omp_lock_t lock;
+    omp_init_lock(&lock);
 
     #pragma omp parallel
     {
@@ -110,8 +112,10 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
 
         for (unsigned int i = startPos; i < endPos; i += 3)
         {
+        	//omp_set_lock(&lock);
             string trigram = contents.substr(i, 3);
             ++trigramDistribution[trigram];
+            //omp_unset_lock(&lock);
         }
     }
     return trigramDistribution;
@@ -177,7 +181,7 @@ string analyzeDocument(string contents, unsigned int threadCount)
     Histogram trigrams = collectTrigrams(contents, threadCount);
 	TimePoint end = std::chrono::system_clock::now();
 
-	Duration elapsedMillis = end - start;
+	Duration elapsedMillis = (end - start) * 1000.0;
 	cout << elapsedMillis.count() << endl;
 
 	return mapToString(trigrams);
