@@ -98,7 +98,7 @@ delete numbers;
 
 Patrząc na wykresy wydajności tak napisanej implementacji należy mieć na uwadze, że jeden proces zawsze zajmował się jedynie wysyłaniem danych wejściowych i zapisywaniem danych wyjściowych – nie brał udziału w samych obliczeniach. Bezpośrednio wynika z takiego ograniczenia niemożność uruchomienia programu dla liczby procesów równej 1; w celu przedstawienia wydajności „dla 1 procesu” napisano osobny program, sekwencyjnie sprawdzający liczby po kolei. \\
 
-Z uwagi na specyfikę komputera, na którym były wykonywane obliczenia (12-rdzeniowy procesor), zauważalne przyspieszenie obserwować można do 12 procesów włącznie.
+Z uwagi na specyfikę komputera, na którym były wykonywane obliczenia (4-rdzeniowy procesor z HT), znaczące przyspieszenie obserwowane jest do liczby procesów równej 4 włącznie; zwiększając dalej (szczególnie przy liczbie procesów niebędącej wielokrotnością liczby rdzeni) zauważamy spadek przyrostu wydajności.
 
 \begin{center}
 \includegraphics[width=0.7\textwidth]{data/przyspieszenie.png}
