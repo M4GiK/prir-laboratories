@@ -11,13 +11,13 @@ float *devKernel;
 float gpuTime = 0.0f;
 
 /**
- * Gets time in seconds for CUDA kernel operations.
+ * Gets time in milliseconds for CUDA kernel operations.
  *
- * @return Time in seconds for CUDA operations.
+ * @return Time in milliseconds for CUDA operations.
  */
 float getGPUTime()
 {
-	return gpuTime / 1000;
+	return gpuTime;
 }
 
 /**

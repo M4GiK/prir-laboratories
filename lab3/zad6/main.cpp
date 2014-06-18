@@ -49,12 +49,13 @@ void performGaussianBlur(std::string videoInput, std::string videoOutput)
 /**
  * This method calculates time for CUDA operations.
  *
- * @return time in seconds.
+ * @return time in milliseconds.
  */
 double getTime()
 {
-	return ((double) stopTime.time + ((double) stopTime.millitm * 0.001))
-			- ((double) startTime.time + ((double) startTime.millitm * 0.001));
+	return (((double) stopTime.time + ((double) stopTime.millitm * 0.001))
+			- ((double) startTime.time + ((double) startTime.millitm * 0.001)))
+					* 1000.0;
 }
 
 /**
@@ -87,8 +88,8 @@ int main(int argc, char* argv[])
 	prepareFilter();
 	performGaussianBlur(videoInput, videoOutput);
 
-	cout << "Total time : " << getTime() << " sec" << endl;
-	cout << "Kernel time: " << getGPUTime() << " sec" << endl;
+	cout << "Total time : " << getTime() << " ms" << endl;
+	cout << "Kernel time: " << getGPUTime() << " ms" << endl;
 	cout << "Threads	: " << threadCount << endl;
 
 	return 0;

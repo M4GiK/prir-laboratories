@@ -31,9 +31,9 @@ const static int KERNEL_SIZE = 3;
 const static float KERNEL[9] = {1.0f, 2.0f, 1.0f, 2.0f, 4.0f, 2.0f, 1.0f, 2.0f, 1.0f};
 
 /**
- * Gets time in seconds for CUDA kernel operations.
+ * Gets time in milliseconds for CUDA kernel operations.
  *
- * @return Time in seconds for CUDA operations.
+ * @return Time in milliseconds for CUDA operations.
  */
 float getGPUTime();
 
