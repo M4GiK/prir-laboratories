@@ -100,8 +100,8 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
 
     unsigned int chunkSize = calculateChunkSize(contents, threadCount);
     // Uncomment if you want use thread safe operations.
-	//omp_lock_t lock;
-	//omp_init_lock(&lock);
+	omp_lock_t lock;
+	omp_init_lock(&lock);
 
     #pragma omp parallel
     {
@@ -116,11 +116,11 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
         for (unsigned int i = startPos; i < endPos; i += 3)
         {
         	// Uncomment if you want use thread safe operations.
-        	//omp_set_lock(&lock);
+        	omp_set_lock(&lock);
             string trigram = contents.substr(i, 3);
             ++trigramDistribution[trigram];
             // Uncomment if you want use thread safe operations.
-            //omp_unset_lock(&lock);
+            omp_unset_lock(&lock);
         }
     }
     return trigramDistribution;
