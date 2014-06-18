@@ -99,8 +99,9 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
     Histogram trigramDistribution;
 
     unsigned int chunkSize = calculateChunkSize(contents, threadCount);
-    omp_lock_t lock;
-    omp_init_lock(&lock);
+    // Uncomment if you want use thread safe operations.
+	//omp_lock_t lock;
+	//omp_init_lock(&lock);
 
     #pragma omp parallel
     {
@@ -110,11 +111,15 @@ Histogram analyzeInput(string contents, unsigned int threadCount)
         unsigned int endPos = chunkSize * (threadNumber + 1);
         endPos = std::min(endPos, (unsigned int)contents.size());
 
+        // Alternative for thread safe operations by use a critical section.
+        //#pragma omp critical
         for (unsigned int i = startPos; i < endPos; i += 3)
         {
+        	// Uncomment if you want use thread safe operations.
         	//omp_set_lock(&lock);
             string trigram = contents.substr(i, 3);
             ++trigramDistribution[trigram];
+            // Uncomment if you want use thread safe operations.
             //omp_unset_lock(&lock);
         }
     }
