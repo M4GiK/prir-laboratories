@@ -68,40 +68,18 @@ Programem spełniającym polecenie zadania 5. jest taki, który wykona mnożenie
 \\
 
 \begin{lstlisting}
-    dim3 dimBlock;
-    dimBlock.x = matrixSize;
-    dimBlock.y = matrixSize;
-
-    float *hostA = initializeMatrix(matrixSize);
-    float *hostB = initializeMatrix(matrixSize);
-
-    int allocBuffer = matrixSize * matrixSize * sizeof(float);
-    float *devA = allocateDeviceMemory(allocBuffer);
-    float *devB = allocateDeviceMemory(allocBuffer);
-    float *devC = allocateDeviceMemory(allocBuffer);
-
-    copyHostMemoryToDevice(hostA, devA, allocBuffer);
-    copyHostMemoryToDevice(hostB, devB, allocBuffer);
-
-    cudaEvent_t start, stop;
-    createTimerEvents(start, stop);
-
-    startTimer(start);
-
-    matrixMultiplyKernel<<<dimBlock, threadCount>>>(devA, devB, devC, matrixSize);
-
-    stopTimer(stop);
-
-    cout << readExecutionTime(start, stop) << endl;
-
-    destroyTimerEvents(start, stop);
-    freeMemory(devA, hostA, devB, hostB, devC);
+dim3 block(threadCount);
+dim3 grid(matrixSize / block.x, matrixSize / block.y);
+startTimer(start);
+matrixMultiplyKernel<<<grid, block>>>(devA, devB, devC, matrixSize);
+stopTimer(stop);
+cout << readExecutionTimeInMillis(start, stop) << endl;
 \end{lstlisting}
 
 
 Etapy wykonania programu wykorzystującego CUDA można wydzielić następująco:
 \begin{enumerate}
-\item Ustawienie zmiennej typu struktury dim3, która przechowuje informacje o wymiarach problemu z zadania.
+\item Ustawienie dwóch zmiennych typu struktury dim3: określającej wymiary macierzy i określającej wymiary pojedynczego bloku.
 \item Zainicjalizowanie macierzy wejściowych, używając generatora liczb pseudo-losowych.
 \item Zainicjalizowanie macierzy wejściowych przesłanych do jądra CUDA.
 \item Transfer danych do macierzy jądra CUDA.
@@ -111,15 +89,18 @@ Etapy wykonania programu wykorzystującego CUDA można wydzielić następująco:
 
 
 \section*{Przebieg}
-Aby wykonać wykresy opisane w poleceniu należało również napisać program mnożący dwie macierze przy użyciu procesora centralnego.
-Taki program, korzystający z dyrektyw OpenMP, pozwolił na utworzone poniższego wykresu kolumnowego: \\
+Poprzednio utworzone wykresy kolumnowe zestawiające czas wykonania mnożenia macierzy CPU i mnożenia macierzy GPU zastąpiono wykresami prezentującymi przyrost wydajności wraz ze zwiększaną liczbą wątków. \\
 \begin{center}
 \includegraphics[width=0.7\textwidth]{data/wykonanie.png}
 \end{center}
 
+\begin{center}
+\includegraphics[width=0.7\textwidth]{data/przyspieszenie.png}
+\end{center}
+
 Przy tworzeniu takiego programu nie wykonano żadnych optymalizacji; implementacja jest „naiwnym” mnożeniem odpowiadających komórek macierzy.
 \\
-Program mnożący dwie macierze przy użyciu karty graficznej pozwolił odnotować czasy wykonania rzędu 0.003 sekundy – liczba rzędów wielkości, o jakie wydajność płynąca z użycia procesora karty graficznej przewyższa wydajność płynącą z użycia procesora centralnego jest niesamowita.\\
+Dla macierzy kwadratowej o boku 1024 odnotowano czasy wykonania mnożenia rzędu 0.02 sekundy.\\
 
 
 \end{document}
