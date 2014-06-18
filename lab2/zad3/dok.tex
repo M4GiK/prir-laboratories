@@ -108,6 +108,9 @@ Wcześniejsza implementacja:
 \end{lstlisting}
 
 Była podatna na błędy współbieżnego dostępu do mapy wystąpień trigramów, a także jej wydajność była dużo niższa. Wynikało to zapewne z tego w jaki sposób dane są porcjowane – porcjowanie ręczne pozwala na większą kontrolę nad rozmiarem porcji, co więcej, pozwala ustawić nieregularny rozmiar porcji, co jest szczególnie przydatne, gdy rozmiar danych wejściowych nie jest podzielny przez 3 * [liczba wątków].
+\\
+
+Niestety kolekcje standardowej biblioteki szablonów nie są przystosowane do pracy w architekturze wielowątkowej; ich metody nie są pod tym względem bezpieczne. Aby móc bezpiecznie stosować te metody należy zaimplementować własne mechanizm kontroli dostępów (np. zamki), albo zastosować sekcję krytyczną (\emph{pragma omp critical}).
 
 
 \section*{Przebieg}
@@ -126,6 +129,16 @@ Poniżej wykresy przedstawiający rezultat przeprowadzonych operacji na wątkach
 \includegraphics[width=0.7\textwidth]{data/przyspieszenie.png}
 \end{center}
 
+Wykresy z zaimplementowanymi zamkami.
+\\
+\begin{center}
+\includegraphics[width=0.7\textwidth]{data/wykonanie_2.png}
+\end{center}
+
+
+\begin{center}
+\includegraphics[width=0.7\textwidth]{data/przyspieszenie_2.png}
+\end{center}
 
 \section*{Wnioski}
 Zauważalny spadek wydajności można tłumaczyć liczbą rdzeni maszyny, na której wykonywano pomiary (serwer CUDA) oraz sposobem przydziału zadań – algorytmem karuzeli – klauzula schedule(static).

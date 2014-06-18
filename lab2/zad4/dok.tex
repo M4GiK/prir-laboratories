@@ -128,7 +128,7 @@ Wcześniejsza implementacja:
 
 
 \section*{Przebieg}
-Obliczenia zostały wykonane na serwerze CUDA. \\
+Obliczenia zostały wykonane na serwerze CUDA. Oprócz tego zostały zastosowane dwie równoległe sekcje; najpierw plik podlega analizie, a następnie przeprowadza dedukcję. W tym programie również zaimplementowane zostały mechanizmy zamków (tylko do analizy), natomiast w cześci rozpoznawania, obeszło się bez machanizmów zamków, gdyż iteratory zapewniają bezpieczny dostęp.\\
 
 
 
