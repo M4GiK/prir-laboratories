@@ -6,18 +6,13 @@ using std::endl;
 
 __global__ void matrixMultiplyKernel(float *A, float *B, float *C, int N)
 {
-	int threadId = threadIdx.x + blockIdx.x * blockDim.x + blockIdx.y * 1024 * 1024;
-	int row = threadId / N;
-	int col = threadId % N;
+	unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+	unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-	float result = 0.f;
-
+	float result = 0.0;
 	for (int i = 0; i < N; ++i)
 	{
-        if (row < N && col < N)
-        {
-	        result += A[(row * N) + i] * B[(i * N) + col];
-        }
+		result += A[row * N + i] * B[i * N + col];
 	}
 
 	C[(row * N) + col] = result;
@@ -82,7 +77,7 @@ void stopTimer(cudaEvent_t &stop)
 	cudaEventSynchronize(stop);
 }
 
-float readExecutionTime(cudaEvent_t &start, cudaEvent_t &stop)
+float readExecutionTimeInMillis(cudaEvent_t &start, cudaEvent_t &stop)
 {
     float time;
     cudaEventElapsedTime(&time, start, stop);
@@ -97,12 +92,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	unsigned int matrixSize = atoi(argv[1]);
-	unsigned int threadCount = atoi(argv[2]);
-
-	dim3 dimBlock;
-	dimBlock.x = matrixSize;
-	dimBlock.y = matrixSize;
+	unsigned int threadCount = atoi(argv[1]);
+	unsigned int matrixSize = atoi(argv[2]);
 
     float *hostA = initializeMatrix(matrixSize);
     float *hostB = initializeMatrix(matrixSize);
@@ -117,14 +108,17 @@ int main(int argc, char *argv[])
 
     cudaEvent_t start, stop;
 	createTimerEvents(start, stop);
-
+	
+	dim3 block(threadCount);
+	dim3 grid(matrixSize / block.x, matrixSize / block.y);
+	
     startTimer(start);
 
-    matrixMultiplyKernel<<<dimBlock, threadCount>>>(devA, devB, devC, matrixSize);
+    matrixMultiplyKernel<<<grid, block>>>(devA, devB, devC, matrixSize);
 
     stopTimer(stop);
 	
-    cout << readExecutionTime(start, stop) << endl;
+    cout << readExecutionTimeInMillis(start, stop) << endl;
 
     destroyTimerEvents(start, stop);
     freeMemory(devA, hostA, devB, hostB, devC);
