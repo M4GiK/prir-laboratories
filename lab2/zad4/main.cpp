@@ -14,6 +14,7 @@
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <omp.h>
 #include <string>
 
 using std::cout;
@@ -94,14 +95,18 @@ Histogram analyzeInput(unsigned int threadCount, string contents, int portion)
 {
 	Histogram trigrams;
 	string threeLetters;
+	omp_lock_t lock;
+	omp_init_lock(&lock);
 
 	#pragma omp parallel num_threads(threadCount) shared(trigrams)
 	{
 		#pragma omp for private(threeLetters) schedule(static, portion)
 		for (unsigned int i = 0; i < contents.size(); i += 3)
 		{
+			omp_set_lock(&lock);
 			threeLetters = string(contents.substr(i, 3));
 			trigrams[threeLetters]++;
+			omp_unset_lock(&lock);
 		}
 	}
 
