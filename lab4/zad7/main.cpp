@@ -149,6 +149,12 @@ void searchForPrimesUsingMPI(const LongVector *numbers, LongMultimap &results, c
 	long rank = MPI::COMM_WORLD.Get_rank();
 	long size = MPI::COMM_WORLD.Get_size();
 	
+	if (size == 1)
+	{
+		cerr << "Parameter -n should be greater then 1" << endl;
+		exit (EXIT_FAILURE);
+	}
+
 	double start = MPI_Wtime();
 	for (LongVector::const_iterator it = numbers->begin(); it != numbers->end(); ++it)
 	{
@@ -208,8 +214,8 @@ void printResults(const LongMultimap &results)
 
 void printTime(double start, double end)
 {
-	double time = (end - start);
-	cout << "Czas: " << time << "s\n";
+	double time = (end - start) * 1000.0;
+	cout << "Czas: " << time << "ms\n";
 }
 
 bool rabinMillerTest(long value, unsigned int repeatCount)
